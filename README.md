@@ -1,5 +1,5 @@
 # Monodepth2.cpp
-
+This is a simple inference implementation for a well-known depth estimation network written in C++. The whole project is based on libtorch API.
 
 # steps to run this simple project
 

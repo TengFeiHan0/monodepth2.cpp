@@ -20,12 +20,12 @@ args = parser.parse_args()
 # Loads disp_net model and checkpoint_args
 disp_net, checkpoint_args = load_dispnet_with_args(args)
 
-# Iterate and compute depth
+# choose a randowm input with required size(640,192)
 disp_net.cuda()
 disp_net.eval()
 example = torch.rand(1, 3,640, 192).cuda()
-traced_script_module = torch.jit.trace(disp_net, example)
-# 保存模型
+traced_script_module = torch.jit.trace(disp_net, example)#convert
+# save torchscript model
 traced_script_module.save("packnet.pt")
 
 

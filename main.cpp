@@ -32,7 +32,7 @@ int main(int argc,char**argv)
    
     auto tensor_output = outputs.toTensor();
     
-    tensor_output = tensor_output.permute({0,3,2,1});//change the dimentions of tensor
+    tensor_output = tensor_output.permute({0,2,3,1});//change the dimentions of tensor
     // tensor_output=tensor_output.squeeze(0).detach().permute({1,2,0});
     // tensor_output=tensor_output.mul(255).clamp(0,255).to(torch::kU8);
     tensor_output=tensor_output.to(torch::kCPU);

@@ -27,17 +27,4 @@ example = torch.rand(1, 3,640, 192).cuda()
 traced_script_module = torch.jit.trace(disp_net, example, check_trace= False)#convert
 # save torchscript model
 traced_script_module.save("packnet.pt")
-#skip this if you don't need
-#generate a onnx file 
-#please remember that you should unannotate latest two lines if require the support of dynamic shape
-export_onnx_file = "packnet.onnx"					
-torch.onnx.export(disp_net,
-                    example,
-                    export_onnx_file,
-                    opset_version=10,
-                    do_constant_folding=True,	
-                    input_names=["input"],		
-                    output_names=["output"],
-                    #dynamic_axes={"input":{0:"batch_size"},		# dynamic shape
-                                    #"output":{0:"batch_size"}}	
-      )
+

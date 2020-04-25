@@ -19,5 +19,5 @@ you could follow ```to_jit.py ``` to create your own torchscript model and use m
 [packnet-sfm](https://drive.google.com/file/d/1wesXmbRr9z4mTD6Ox7aquOsp4Vom6Dkg/view?usp=sharing)(`FP16`)
 
 ## ONNX
-we also offer a onnx file that could be accerlated with TensorRT.the related demo code will be released soon.
+we also offer a onnx file that could be accerlated with TensorRT.the related demo code will be released soon.\
 [packnet-sfm]()

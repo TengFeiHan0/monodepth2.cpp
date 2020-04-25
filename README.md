@@ -12,6 +12,8 @@ This is a simple inference implementation for a well-known depth estimation netw
 If you're familiar with docker, you could run this [project](https://hub.docker.com/repository/docker/tengfei2503/maskrcnn-benchmark.cpp) withour the need of installing those libraries. please remember  install nvidia-docker because our projects needs to use gpus.
 
 ## Converted models
-you could follow ```to_jit.py ``` to create your own torchscript model and use my converted model directly.\
+
+you could follow ```to_jit.py ``` to create your own torchscript model and use my converted model directly. We provide three different converted models as below.\
 [monodepth2](https://drive.google.com/open?id=1kZ0H_dWjjv07TvmgbENdhPnkuKQEXt9g)\
-[packnet-sfm](https://drive.google.com/file/d/14BLOVAMV5ZQeq7tbI1b6GJ9erkSvCszF/view?usp=sharing)
+[packnet-sfm](https://drive.google.com/file/d/14BLOVAMV5ZQeq7tbI1b6GJ9erkSvCszF/view?usp=sharing)(`FP32`)
+[packnet-sfm](https://drive.google.com/file/d/1wesXmbRr9z4mTD6Ox7aquOsp4Vom6Dkg/view?usp=sharing)(`FP16`)

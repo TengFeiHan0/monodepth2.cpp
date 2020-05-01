@@ -10,7 +10,8 @@ This is a simple inference implementation for a well-known depth estimation netw
 ## runtime
 Model | Language | 3D Packing | Inference time / im | Link
 --- |:---:|:---:|:---:|---:
-packnet_32 | litorch | Yes | 328ms | [download](https://drive.google.com/file/d/14BLOVAMV5ZQeq7tbI1b6GJ9erkSvCszF/view?usp=sharing)
+packnet_32 | litorch | Yes | 328ms | [download](https://drive.google.com/file/d/14BLOVAMV5ZQeq7tbI1b6GJ9erkSvCszF/view?usp=sharing)\
+packnet_32 | python | Yes | 3.5s | [download](https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/models/PackNet_MR_selfsup_K.pth.tar)
 
 ## dockerfile
 If you're familiar with docker, you could run this [project](https://hub.docker.com/repository/docker/tengfei2503/maskrcnn-benchmark.cpp) withour the need of installing those libraries. please remember  install nvidia-docker because our projects needs to use gpus.

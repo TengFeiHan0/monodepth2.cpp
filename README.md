@@ -8,9 +8,9 @@ This is a simple inference implementation for a well-known depth estimation netw
 3. prepare a sample image and change its path in main.cpp
 4. if you don't have available gpus, please annotate CUDA options in  ```CMakeLists.txt ```
 ## runtime
-Model | 3D Packing | Inference time / im |Link
---- |:---:|:---:|---:
-packnet_32 | Yes | 328ms | [download](https://drive.google.com/file/d/14BLOVAMV5ZQeq7tbI1b6GJ9erkSvCszF/view?usp=sharing)
+Model | Language | 3D Packing | Inference time / im | Link
+--- |:---:|:---:|:---:|---:
+packnet_32 | litorch | Yes | 328ms | [download](https://drive.google.com/file/d/14BLOVAMV5ZQeq7tbI1b6GJ9erkSvCszF/view?usp=sharing)
 
 ## dockerfile
 If you're familiar with docker, you could run this [project](https://hub.docker.com/repository/docker/tengfei2503/maskrcnn-benchmark.cpp) withour the need of installing those libraries. please remember  install nvidia-docker because our projects needs to use gpus.

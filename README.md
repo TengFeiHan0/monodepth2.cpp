@@ -8,9 +8,9 @@ This is a simple inference implementation for a well-known depth estimation netw
 3. prepare a sample image and change its path in main.cpp
 4. if you don't have available gpus, please annotate CUDA options in  ```CMakeLists.txt ```
 ## runtime
-Model | Language | 3D Packing | Inference time / im | Link
+Model | Language | 3D Packing | Inference time / im |Link
 --- |:---:|:---:|:---:|---:
-packnet_32 | litorch | Yes | 328ms | [download](https://drive.google.com/file/d/14BLOVAMV5ZQeq7tbI1b6GJ9erkSvCszF/view?usp=sharing)\
+packnet_32 | litorch | Yes | 328ms | [download](https://drive.google.com/file/d/14BLOVAMV5ZQeq7tbI1b6GJ9erkSvCszF/view?usp=sharing)
 packnet_32 | python | Yes | 3.5s | [download](https://tri-ml-public.s3.amazonaws.com/github/packnet-sfm/models/PackNet_MR_selfsup_K.pth.tar)
 
 ## dockerfile

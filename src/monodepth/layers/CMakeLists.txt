@@ -1,0 +1,19 @@
+if(CUDA_FOUND)
+  file(GLOB sources "cuda/*.cu" "cpu/*.cpp" "*.cpp" )
+else()
+  file(GLOB sources "cpu/*.cpp" "*.cpp")
+endif()
+add_library(layers STATIC ${sources})
+if(CUDA_FOUND)
+  target_compile_definitions(layers PUBLIC WITH_CUDA=ON)
+  target_include_directories(layers 
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../../include/monodepth/layers/ 
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../../include/monodepth/layers/cpu
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../../include/monodepth/layers/cuda )
+else()
+  target_include_directories(layers 
+    PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../../include/monodepth/layers/ 
+    PRIVATE ${CMAKE_CURRENT_SOURCE_DIR}/../../../include/monodepth/layers/cpu )
+endif()
+
+target_link_libraries(layers PUBLIC ${TORCH_LIBRARIES})

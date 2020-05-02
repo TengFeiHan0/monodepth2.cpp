@@ -8,7 +8,7 @@
 #include <defaults.h>
 
 
-namespace rcnn{
+namespace monodepth{
 namespace modeling{
 
 BackboneImpl::BackboneImpl(torch::nn::Sequential backbone, int64_t out_channels) : backbone_(register_module("backbone", backbone)), out_channels_(out_channels){};
@@ -36,19 +36,19 @@ Backbone BuildResnetBackbone(){
   torch::nn::Sequential model;
   auto body = ResNet();
   model->push_back(body);
-  auto backbone = Backbone(model, rcnn::config::GetCFG<int64_t>({"MODEL", "RESNETS", "BACKBONE_OUT_CHANNELS"}));
+  auto backbone = Backbone(model, monodepth::config::GetCFG<int64_t>({"MODEL", "RESNETS", "BACKBONE_OUT_CHANNELS"}));
   return backbone;
 }
 
 Backbone BuildResnetFPNBackbone(){
   torch::nn::Sequential model;
   ResNet body = ResNet();
-  int64_t in_channels_stage2 = rcnn::config::GetCFG<int64_t>({"MODEL", "RESNETS", "RES2_OUT_CHANNELS"});
-  int64_t out_channels = rcnn::config::GetCFG<int64_t>({"MODEL", "RESNETS", "BACKBONE_OUT_CHANNELS"});
+  int64_t in_channels_stage2 = monodepth::config::GetCFG<int64_t>({"MODEL", "RESNETS", "RES2_OUT_CHANNELS"});
+  int64_t out_channels = monodepth::config::GetCFG<int64_t>({"MODEL", "RESNETS", "BACKBONE_OUT_CHANNELS"});
   model->push_back(body);
   model->push_back(
     FPNLastMaxPool(
-      rcnn::config::GetCFG<bool>({"MODEL", "FPN", "USE_RELU"}), 
+      monodepth::config::GetCFG<bool>({"MODEL", "FPN", "USE_RELU"}), 
       std::vector<int64_t>{
         in_channels_stage2,
         in_channels_stage2 * 2,
@@ -56,7 +56,7 @@ Backbone BuildResnetFPNBackbone(){
         in_channels_stage2 * 8
       }, 
       out_channels, 
-      rcnn::layers::ConvWithKaimingUniform
+      monodepth::layers::ConvWithKaimingUniform
     )
   );
   auto backbone = Backbone(model, out_channels);
@@ -66,12 +66,12 @@ Backbone BuildResnetFPNBackbone(){
 Backbone BuildVoVNetFPNBackbone(){
   torch::nn::Sequential model;
   VoVNet body = VoVNet();
-  int64_t in_channels_stage = rcnn::config::GetCFG<int64_t>({"MODEL", "VOVNET", "OUT_CHANNELS"});
-  int64_t out_channels = rcnn::config::GetCFG<int64_t>({"MODEL", "VOVNET", "BACKBONE_OUT_CHANNELS"});
+  int64_t in_channels_stage = monodepth::config::GetCFG<int64_t>({"MODEL", "VOVNET", "OUT_CHANNELS"});
+  int64_t out_channels = monodepth::config::GetCFG<int64_t>({"MODEL", "VOVNET", "BACKBONE_OUT_CHANNELS"});
   model->push_back(body);
   model->push_back(
     FPNLastMaxPool(
-      rcnn::config::GetCFG<bool>({"MODEL", "FPN", "USE_RELU"}), 
+      monodepth::config::GetCFG<bool>({"MODEL", "FPN", "USE_RELU"}), 
       std::vector<int64_t>{
         in_channels_stage,
         in_channels_stage * 2,
@@ -79,7 +79,7 @@ Backbone BuildVoVNetFPNBackbone(){
         in_channels_stage * 4
       }, 
       out_channels, 
-      rcnn::layers::ConvWithKaimingUniform
+      monodepth::layers::ConvWithKaimingUniform
     )
   );
   auto backbone = Backbone(model, out_channels);
@@ -87,8 +87,8 @@ Backbone BuildVoVNetFPNBackbone(){
 }
   
 Backbone BuildBackbone(){
-  std::string name = rcnn::config::GetCFG<std::string>({"MODEL", "BACKBONE", "CONV_BODY"});
-  rcnn::registry::backbone build_function = rcnn::registry::BACKBONES(name);
+  std::string name = monodepth::config::GetCFG<std::string>({"MODEL", "BACKBONE", "CONV_BODY"});
+  monodepth::registry::backbone build_function = monodepth::registry::BACKBONES(name);
   Backbone model = build_function();
   return model;
 }

@@ -2,7 +2,7 @@
 #include <algorithm>
 
 
-namespace rcnn{
+namespace monodepth{
 namespace modeling{
 
 FPNImpl::FPNImpl(bool use_relu, const std::vector<int64_t> in_channels_list, int64_t out_channels, ConvFunction conv_block)
@@ -66,4 +66,4 @@ std::shared_ptr<FPNLastMaxPoolImpl> FPNLastMaxPoolImpl::clone(torch::optional<to
 }
 
 } // namespace modeling
-} // namespace rcnn
+} // namespace monodepth

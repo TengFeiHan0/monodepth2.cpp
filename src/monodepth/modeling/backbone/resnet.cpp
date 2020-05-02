@@ -4,7 +4,7 @@
 #include <cmath>
 
 
-namespace rcnn {
+namespace monodepth {
 namespace modeling {
 
 ResNetImpl::StageSpec::StageSpec(int index, int block_count, bool return_features)
@@ -13,14 +13,14 @@ ResNetImpl::StageSpec::StageSpec(int index, int block_count, bool return_feature
    return_features_(return_features){}
 
 ResNetImpl::ResNetImpl() {
-  std::string name = rcnn::config::GetCFG<std::string>({"MODEL", "BACKBONE", "CONV_BODY"});
-  std::vector<StageSpec> stage_specs = rcnn::registry::STAGE_SPECS(name);
+  std::string name = monodepth::config::GetCFG<std::string>({"MODEL", "BACKBONE", "CONV_BODY"});
+  std::vector<StageSpec> stage_specs = monodepth::registry::STAGE_SPECS(name);
   stem_ = register_module("stem", BaseStem());
-  int64_t num_groups = rcnn::config::GetCFG<int64_t>({"MODEL", "RESNETS", "NUM_GROUPS"});
-  int64_t width_per_group = rcnn::config::GetCFG<int64_t>({"MODEL", "RESNETS", "WIDTH_PER_GROUP"});
-  int64_t in_channels = rcnn::config::GetCFG<int64_t>({"MODEL", "RESNETS", "STEM_OUT_CHANNELS"});
+  int64_t num_groups = monodepth::config::GetCFG<int64_t>({"MODEL", "RESNETS", "NUM_GROUPS"});
+  int64_t width_per_group = monodepth::config::GetCFG<int64_t>({"MODEL", "RESNETS", "WIDTH_PER_GROUP"});
+  int64_t in_channels = monodepth::config::GetCFG<int64_t>({"MODEL", "RESNETS", "STEM_OUT_CHANNELS"});
   int64_t stage2_bottleneck_channels = num_groups * width_per_group;
-  int64_t stage2_out_channels = rcnn::config::GetCFG<int64_t>({"MODEL", "RESNETS", "RES2_OUT_CHANNELS"});
+  int64_t stage2_out_channels = monodepth::config::GetCFG<int64_t>({"MODEL", "RESNETS", "RES2_OUT_CHANNELS"});
 
   for (auto& stage_spec: stage_specs) {
     std::string name = "layer" + std::to_string(stage_spec.index_);
@@ -36,7 +36,7 @@ ResNetImpl::ResNetImpl() {
           out_channels,
           stage_spec.block_count_,
           num_groups,
-          rcnn::config::GetCFG<bool>({"MODEL", "RESNETS", "STRIDE_IN_1X1"}),
+          monodepth::config::GetCFG<bool>({"MODEL", "RESNETS", "STRIDE_IN_1X1"}),
           ((int64_t) (stage_spec.index_ > 1)) + 1
         )
       )//register_module
@@ -44,7 +44,7 @@ ResNetImpl::ResNetImpl() {
     in_channels = out_channels;
     return_features_.push_back(stage_spec.return_features_);
   }
-  freeze_backbone(rcnn::config::GetCFG<int64_t>({"MODEL", "BACKBONE", "FREEZE_CONV_BODY_AT"}));
+  freeze_backbone(monodepth::config::GetCFG<int64_t>({"MODEL", "BACKBONE", "FREEZE_CONV_BODY_AT"}));
 }
 
 std::shared_ptr<ResNetImpl> ResNetImpl::clone(torch::optional<torch::Device> device) const {
@@ -154,10 +154,10 @@ BottleneckImpl::BottleneckImpl(
   if (in_channels != out_channels) {
     int64_t down_stride = (dilation == 1 ? stride : 1);
     downsample_ = register_module("downsample", torch::nn::Sequential(
-      rcnn::layers::Conv2d(
+      monodepth::layers::Conv2d(
         torch::nn::Conv2dOptions(in_channels, out_channels, 1).stride(down_stride).with_bias(false)
       ),
-      rcnn::layers::FrozenBatchNorm2d(out_channels)
+      monodepth::layers::FrozenBatchNorm2d(out_channels)
     )
     );
     for (auto& param : downsample_->named_parameters()) {
@@ -181,12 +181,12 @@ BottleneckImpl::BottleneckImpl(
   }
 
   conv1_ = register_module(
-    "conv1", rcnn::layers::Conv2d(torch::nn::Conv2dOptions(in_channels, bottleneck_channels, 1).stride(stride_1x1).with_bias(false))
+    "conv1", monodepth::layers::Conv2d(torch::nn::Conv2dOptions(in_channels, bottleneck_channels, 1).stride(stride_1x1).with_bias(false))
   );
-  bn1_ = register_module("bn1", rcnn::layers::FrozenBatchNorm2d(bottleneck_channels));
+  bn1_ = register_module("bn1", monodepth::layers::FrozenBatchNorm2d(bottleneck_channels));
 
   conv2_ = register_module("conv2", 
-    rcnn::layers::Conv2d(
+    monodepth::layers::Conv2d(
       torch::nn::Conv2dOptions(bottleneck_channels, bottleneck_channels, 3)
         .stride(stride_3x3)
         .padding(dilation)
@@ -196,10 +196,10 @@ BottleneckImpl::BottleneckImpl(
     )
   );
   
-  bn2_ = register_module("bn2", rcnn::layers::FrozenBatchNorm2d(bottleneck_channels));
+  bn2_ = register_module("bn2", monodepth::layers::FrozenBatchNorm2d(bottleneck_channels));
 
-  conv3_ = register_module("conv3", rcnn::layers::Conv2d(torch::nn::Conv2dOptions(bottleneck_channels, out_channels, 1).with_bias(false)));
-  bn3_ = register_module("bn3", rcnn::layers::FrozenBatchNorm2d(out_channels));
+  conv3_ = register_module("conv3", monodepth::layers::Conv2d(torch::nn::Conv2dOptions(bottleneck_channels, out_channels, 1).with_bias(false)));
+  bn3_ = register_module("bn3", monodepth::layers::FrozenBatchNorm2d(out_channels));
   torch::nn::init::kaiming_uniform_(conv1_->weight, 1);
   torch::nn::init::kaiming_uniform_(conv2_->weight, 1);
   torch::nn::init::kaiming_uniform_(conv3_->weight, 1);
@@ -222,12 +222,12 @@ torch::Tensor BottleneckImpl::forward(torch::Tensor x) {
 }
 
 BaseStemImpl::BaseStemImpl() {
-  int64_t out_channels = rcnn::config::GetCFG<int64_t>({"MODEL", "RESNETS", "STEM_OUT_CHANNELS"});
+  int64_t out_channels = monodepth::config::GetCFG<int64_t>({"MODEL", "RESNETS", "STEM_OUT_CHANNELS"});
   conv1_ = register_module(
-    "conv1", rcnn::layers::Conv2d(torch::nn::Conv2dOptions(3, out_channels, 7).stride(2).padding(3).with_bias(false))
+    "conv1", monodepth::layers::Conv2d(torch::nn::Conv2dOptions(3, out_channels, 7).stride(2).padding(3).with_bias(false))
   );
 
-  bn1_ = register_module("bn1", rcnn::layers::FrozenBatchNorm2d(out_channels));
+  bn1_ = register_module("bn1", monodepth::layers::FrozenBatchNorm2d(out_channels));
   torch::nn::init::kaiming_uniform_(conv1_->weight, 1);
 }
 
@@ -293,47 +293,47 @@ torch::Tensor ResNetHeadImpl::forward(torch::Tensor x) {
 
 namespace registry {
 
-std::vector<rcnn::modeling::ResNetImpl::StageSpec> STAGE_SPECS(std::string name) {
-  std::map<std::string, std::vector<rcnn::modeling::ResNetImpl::StageSpec>> _STAGE_SPECS{
-    {"R-50-C4", std::vector<rcnn::modeling::ResNetImpl::StageSpec>{
-      rcnn::modeling::ResNetImpl::StageSpec(1, 3, false),
-      rcnn::modeling::ResNetImpl::StageSpec(2, 4, false),
-      rcnn::modeling::ResNetImpl::StageSpec(3, 6, true)
+std::vector<monodepth::modeling::ResNetImpl::StageSpec> STAGE_SPECS(std::string name) {
+  std::map<std::string, std::vector<monodepth::modeling::ResNetImpl::StageSpec>> _STAGE_SPECS{
+    {"R-50-C4", std::vector<monodepth::modeling::ResNetImpl::StageSpec>{
+      monodepth::modeling::ResNetImpl::StageSpec(1, 3, false),
+      monodepth::modeling::ResNetImpl::StageSpec(2, 4, false),
+      monodepth::modeling::ResNetImpl::StageSpec(3, 6, true)
     }},
-    {"R-50-C5", std::vector<rcnn::modeling::ResNetImpl::StageSpec>{
-      rcnn::modeling::ResNetImpl::StageSpec(1, 3, false),
-      rcnn::modeling::ResNetImpl::StageSpec(2, 4, false),
-      rcnn::modeling::ResNetImpl::StageSpec(3, 6, false),
-      rcnn::modeling::ResNetImpl::StageSpec(4, 3, true)
+    {"R-50-C5", std::vector<monodepth::modeling::ResNetImpl::StageSpec>{
+      monodepth::modeling::ResNetImpl::StageSpec(1, 3, false),
+      monodepth::modeling::ResNetImpl::StageSpec(2, 4, false),
+      monodepth::modeling::ResNetImpl::StageSpec(3, 6, false),
+      monodepth::modeling::ResNetImpl::StageSpec(4, 3, true)
     }},
-    {"R-101-C4", std::vector<rcnn::modeling::ResNetImpl::StageSpec>{
-      rcnn::modeling::ResNetImpl::StageSpec(1, 3, false),
-      rcnn::modeling::ResNetImpl::StageSpec(2, 4, false),
-      rcnn::modeling::ResNetImpl::StageSpec(3, 23, true)
+    {"R-101-C4", std::vector<monodepth::modeling::ResNetImpl::StageSpec>{
+      monodepth::modeling::ResNetImpl::StageSpec(1, 3, false),
+      monodepth::modeling::ResNetImpl::StageSpec(2, 4, false),
+      monodepth::modeling::ResNetImpl::StageSpec(3, 23, true)
     }},
-    {"R-101-C5", std::vector<rcnn::modeling::ResNetImpl::StageSpec>{
-      rcnn::modeling::ResNetImpl::StageSpec(1, 3, false),
-      rcnn::modeling::ResNetImpl::StageSpec(2, 4, false),
-      rcnn::modeling::ResNetImpl::StageSpec(3, 23, false),
-      rcnn::modeling::ResNetImpl::StageSpec(4, 3, true)
+    {"R-101-C5", std::vector<monodepth::modeling::ResNetImpl::StageSpec>{
+      monodepth::modeling::ResNetImpl::StageSpec(1, 3, false),
+      monodepth::modeling::ResNetImpl::StageSpec(2, 4, false),
+      monodepth::modeling::ResNetImpl::StageSpec(3, 23, false),
+      monodepth::modeling::ResNetImpl::StageSpec(4, 3, true)
     }},
-    {"R-50-FPN", std::vector<rcnn::modeling::ResNetImpl::StageSpec>{
-      rcnn::modeling::ResNetImpl::StageSpec(1, 3, true),
-      rcnn::modeling::ResNetImpl::StageSpec(2, 4, true),
-      rcnn::modeling::ResNetImpl::StageSpec(3, 6, true),
-      rcnn::modeling::ResNetImpl::StageSpec(4, 3, true)
+    {"R-50-FPN", std::vector<monodepth::modeling::ResNetImpl::StageSpec>{
+      monodepth::modeling::ResNetImpl::StageSpec(1, 3, true),
+      monodepth::modeling::ResNetImpl::StageSpec(2, 4, true),
+      monodepth::modeling::ResNetImpl::StageSpec(3, 6, true),
+      monodepth::modeling::ResNetImpl::StageSpec(4, 3, true)
     }},
-    {"R-101-FPN", std::vector<rcnn::modeling::ResNetImpl::StageSpec>{
-      rcnn::modeling::ResNetImpl::StageSpec(1, 3, true),
-      rcnn::modeling::ResNetImpl::StageSpec(2, 4, true),
-      rcnn::modeling::ResNetImpl::StageSpec(3, 23, true),
-      rcnn::modeling::ResNetImpl::StageSpec(4, 3, true)
+    {"R-101-FPN", std::vector<monodepth::modeling::ResNetImpl::StageSpec>{
+      monodepth::modeling::ResNetImpl::StageSpec(1, 3, true),
+      monodepth::modeling::ResNetImpl::StageSpec(2, 4, true),
+      monodepth::modeling::ResNetImpl::StageSpec(3, 23, true),
+      monodepth::modeling::ResNetImpl::StageSpec(4, 3, true)
     }},
-    {"R-152-FPN", std::vector<rcnn::modeling::ResNetImpl::StageSpec>{
-      rcnn::modeling::ResNetImpl::StageSpec(1, 3, true),
-      rcnn::modeling::ResNetImpl::StageSpec(2, 8, true),
-      rcnn::modeling::ResNetImpl::StageSpec(3, 36, true),
-      rcnn::modeling::ResNetImpl::StageSpec(4, 3, true)
+    {"R-152-FPN", std::vector<monodepth::modeling::ResNetImpl::StageSpec>{
+      monodepth::modeling::ResNetImpl::StageSpec(1, 3, true),
+      monodepth::modeling::ResNetImpl::StageSpec(2, 8, true),
+      monodepth::modeling::ResNetImpl::StageSpec(3, 36, true),
+      monodepth::modeling::ResNetImpl::StageSpec(4, 3, true)
     }}
   };
   assert(_STAGE_SPECS.count(name));
@@ -341,4 +341,4 @@ std::vector<rcnn::modeling::ResNetImpl::StageSpec> STAGE_SPECS(std::string name)
 }
 
 } // namespace registry
-} // namespace rcnn
+} // namespace monodepth

@@ -4,7 +4,7 @@
 
 #include <defaults.h>
 
-namespace rcnn {
+namespace monodepth {
 namespace modeling {
 
 OSA_moduleImpl::OSA_moduleImpl(int64_t in_channels, 
@@ -79,8 +79,8 @@ VoVNetImpl::StageSpec::StageSpec(std::vector<int> stage_channels,
                                  blocks_per_stage_(blocks_per_stage){}
 
 VoVNetImpl::VoVNetImpl() {
-  std::string name = rcnn::config::GetCFG<std::string>({"MODEL", "BACKBONE", "CONV_BODY"});
-  StageSpec stage_specs = rcnn::registry::STAGE_SPECS_VoVNet(name);
+  std::string name = monodepth::config::GetCFG<std::string>({"MODEL", "BACKBONE", "CONV_BODY"});
+  StageSpec stage_specs = monodepth::registry::STAGE_SPECS_VoVNet(name);
   auto concat_channels = stage_specs.concat_channels_;
   auto stage_channels = stage_specs.stage_channels_;
   int layers_per_block = stage_specs.layers_per_block_;
@@ -97,7 +97,7 @@ VoVNetImpl::VoVNetImpl() {
     stages_.push_back(register_module(name, OSA_stage(in_channels_list.at(i), stage_channels.at(i), concat_channels.at(i), blocks_per_stage.at(i), layers_per_block, i + 2)));
   }
   initialize_weights();
-  freeze_backbone(rcnn::config::GetCFG<int64_t>({"MODEL", "BACKBONE", "FREEZE_CONV_BODY_AT"}));
+  freeze_backbone(monodepth::config::GetCFG<int64_t>({"MODEL", "BACKBONE", "FREEZE_CONV_BODY_AT"}));
 }
 
 std::vector<torch::Tensor> VoVNetImpl::forward(torch::Tensor x) {
@@ -179,8 +179,8 @@ void conv3x3(torch::nn::Sequential& seq,
              int64_t groups, 
              int64_t kernel_size, 
              int64_t padding) {
-  seq->push_back(module_name + "_" + postfix + "/conv", rcnn::layers::Conv2d(torch::nn::Conv2dOptions(in_channels, out_channels, kernel_size).stride(stride).padding(padding).groups(groups).with_bias(false)));
-  seq->push_back(module_name + "_" + postfix + "/norm", rcnn::layers::FrozenBatchNorm2d(out_channels));
+  seq->push_back(module_name + "_" + postfix + "/conv", monodepth::layers::Conv2d(torch::nn::Conv2dOptions(in_channels, out_channels, kernel_size).stride(stride).padding(padding).groups(groups).with_bias(false)));
+  seq->push_back(module_name + "_" + postfix + "/norm", monodepth::layers::FrozenBatchNorm2d(out_channels));
   seq->push_back(module_name + "_" + postfix + "/relu", torch::nn::Functional(torch::relu));
 }
 
@@ -193,8 +193,8 @@ void conv1x1(torch::nn::Sequential& seq,
              int64_t groups, 
              int64_t kernel_size, 
              int64_t padding) {
-  seq->push_back(module_name + "_" + postfix + "/conv", rcnn::layers::Conv2d(torch::nn::Conv2dOptions(in_channels, out_channels, kernel_size).stride(stride).padding(padding).groups(groups).with_bias(false)));
-  seq->push_back(module_name + "_" + postfix + "/norm", rcnn::layers::FrozenBatchNorm2d(out_channels));
+  seq->push_back(module_name + "_" + postfix + "/conv", monodepth::layers::Conv2d(torch::nn::Conv2dOptions(in_channels, out_channels, kernel_size).stride(stride).padding(padding).groups(groups).with_bias(false)));
+  seq->push_back(module_name + "_" + postfix + "/norm", monodepth::layers::FrozenBatchNorm2d(out_channels));
   seq->push_back(module_name + "_" + postfix + "/relu", torch::nn::Functional(torch::relu));
 }
 } // namespace modeling
@@ -202,10 +202,10 @@ void conv1x1(torch::nn::Sequential& seq,
 namespace registry {
 
 // const _STEM_MODULES
-rcnn::modeling::VoVNetImpl::StageSpec STAGE_SPECS_VoVNet(std::string name) {
-  std::map<std::string, rcnn::modeling::VoVNetImpl::StageSpec> _STAGE_SPECS{
-    {std::string("V-57-FPN"), rcnn::modeling::VoVNetImpl::StageSpec(std::vector<int>{128, 160, 192, 224}, std::vector<int>{256, 512, 768, 1024}, 5, std::vector<int>{1, 1, 4, 3})},
-    {std::string("V-39-FPN"), rcnn::modeling::VoVNetImpl::StageSpec(std::vector<int>{128, 160, 192, 224}, std::vector<int>{256, 512, 768, 1024}, 5, std::vector<int>{1, 1, 2, 2})}
+monodepth::modeling::VoVNetImpl::StageSpec STAGE_SPECS_VoVNet(std::string name) {
+  std::map<std::string, monodepth::modeling::VoVNetImpl::StageSpec> _STAGE_SPECS{
+    {std::string("V-57-FPN"), monodepth::modeling::VoVNetImpl::StageSpec(std::vector<int>{128, 160, 192, 224}, std::vector<int>{256, 512, 768, 1024}, 5, std::vector<int>{1, 1, 4, 3})},
+    {std::string("V-39-FPN"), monodepth::modeling::VoVNetImpl::StageSpec(std::vector<int>{128, 160, 192, 224}, std::vector<int>{256, 512, 768, 1024}, 5, std::vector<int>{1, 1, 2, 2})}
   };
 
   assert(_STAGE_SPECS.count(name));
@@ -213,4 +213,4 @@ rcnn::modeling::VoVNetImpl::StageSpec STAGE_SPECS_VoVNet(std::string name) {
 }
 
 } // namespace registry
-} // namespace rcnn
+} // namespace monodepth

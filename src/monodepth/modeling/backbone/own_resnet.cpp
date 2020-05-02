@@ -136,7 +136,6 @@ template <class Block> struct ResNet : torch::nn::Module {
   torch::nn::Sequential layer2;
   torch::nn::Sequential layer3;
   torch::nn::Sequential layer4;
-  torch::nn::Linear fc;
 
   ResNet(torch::IntList layers, int64_t num_classes=1000)
       : conv1(conv_options(3, 64, 7, 2, 3)),
@@ -145,7 +144,6 @@ template <class Block> struct ResNet : torch::nn::Module {
         layer2(_make_layer(128, layers[1], 2)),
         layer3(_make_layer(256, layers[2], 2)),
         layer4(_make_layer(512, layers[3], 2)),
-        fc(512 * Block::expansion, num_classes)
         {
     register_module("conv1", conv1);
     register_module("bn1", bn1);
@@ -153,7 +151,6 @@ template <class Block> struct ResNet : torch::nn::Module {
     register_module("layer2", layer2);
     register_module("layer3", layer3);
     register_module("layer4", layer4);
-    register_module("fc", fc);
 
     // Initializing weights
     for(auto m: this->modules()){
@@ -177,21 +174,24 @@ template <class Block> struct ResNet : torch::nn::Module {
 
   torch::Tensor forward(torch::Tensor x){
 
-    x = conv1->forward(x);
-    x = bn1->forward(x);
-    x = torch::relu(x);
-    x = torch::max_pool2d(x, 3, 2, 1);
+    std::vector<torch::Tensor> features;
 
-    x = layer1->forward(x);
-    x = layer2->forward(x);
-    x = layer3->forward(x);
-    x = layer4->forward(x);
+    torch::Tensor x1 = conv1->forward(x);
+    x1 = bn1->forward(x1);
+    x1 = torch::relu(x1);
+    features.push_back(x1);
+    torch::Tensor x2 = torch::max_pool2d(x1, 3, 2, 1);
+    x2 = layer1->forward(x2);
+    features.push_back(x2);
+    torch::Tensor x3 = layer2->forward(x2);
+    features.push_back(x3);
+    torch::Tensor x4 = layer3->forward(x3);
+    features.push_back(x4);
+    torch::Tensor x5 = layer4->forward(x4);
+    features.push_back(x5);
 
-    x = torch::avg_pool2d(x, 7, 1);
-    x = x.view({x.sizes()[0], -1});
-    x = fc->forward(x);
 
-    return x;
+    return features;
   }
 
 

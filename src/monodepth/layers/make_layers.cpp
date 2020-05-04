@@ -5,19 +5,14 @@ namespace monodepth {
 namespace layers {
 
 torch::nn::Sequential ConvWithKaimingUniform(/*NO GN use_gn=false, */
-                                             bool use_relu,
+                                             bool use_elu,
                                              int64_t in_channels,
                                              int64_t out_channels,
-                                             int64_t kernel_size,
-                                             int64_t stride,
-                                             int64_t dilation){
+                                            ){
   torch::nn::Sequential module;
-  module->push_back(Conv2d(torch::nn::Conv2dOptions(in_channels, out_channels, kernel_size)
-                                        .padding(dilation * static_cast<int>((kernel_size - 1) / 2))
-                                        .stride(stride)
-                                        .with_bias(true)));
-  if (use_relu) {
-    module->push_back(torch::nn::Functional(torch::relu));
+  module->push_back(MakeConv3x3(in_channels, out_channels, true, false));
+  if (use_elu) {
+    module->push_back(torch::nn::Functional(torch::elu));
   }
 
   for (auto &param : module->named_parameters()) {
@@ -47,15 +42,17 @@ torch::nn::Linear MakeFC(int64_t dim_in, int64_t hidden_dim/*, use_gn*/) {
 
 torch::nn::Sequential MakeConv3x3(int64_t in_channels,
                                   int64_t out_channels,
-                                  int64_t dilation,
-                                  int64_t stride,
-                                  /*use_gn, */
-                                  bool use_relu,
+                                  bool use_refl,
                                   bool kaiming_init) {
   torch::nn::Sequential module;
+  if(use_refl){
+    model->push_back(torch::nn::ReflectionPad2d(padding=[1, 1, 1, 1]));
+  }else{
+    model->push_back(torch::nn::ZeroPad2d(padding=[1, 1, 1, 1]));
+  }
+  
+
   module->push_back(Conv2d(torch::nn::Conv2dOptions(in_channels, out_channels, 3)
-                                        .padding(dilation)
-                                        .stride(stride)
                                         .with_bias(true)));
   if (kaiming_init) {
     for(auto &param : module->named_parameters()){
@@ -78,9 +75,6 @@ torch::nn::Sequential MakeConv3x3(int64_t in_channels,
     } 
   }
 
-  if (use_relu) {
-      module->push_back(torch::nn::Functional(torch::relu));
-  }
   return module;
 }
 

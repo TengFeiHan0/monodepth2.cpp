@@ -1,51 +1,43 @@
-#include <torch/torch.h>
-#include <iostream>
+#include"estimator/monodepth2.h"
 
-struct DepthDecoder : torch::nn::Module {
-    DepthDecoder(){
+namespace monodepth{
+    namespace modeling{
+        MonodepthImpl::MonodepthImpl()
+          :posedecoder(register_module("posedecoder", BuildPoseDecoderModule())),
+           depthdecoder(register_module("depthdecoder", BuildDepthDecoderModule())){};
 
-        for(int i=4; i>=0; i--) {
-            if(i==4){
-                num_ch_in = num_ch_enc[num_ch_enc.size()-1];
-            }
-            else{
-                num_ch_in = num_ch_dec[i+1];
-            }
-            num_ch_out = num_ch_dec[i];
+        template <>
+        torch::Tensor MonodepthImpl::forward( torch::Tensor x){
+            assert(!is_training())
+            std::vector<torch::Tensor> features = backbone->forward(x);
+            std::vector<torch::Tensor> disps = depthdecoder->forward(features);
 
-            decoder_conv.push_back(
-                register_module("upconv_0"+std::to_string(i), conv_block(use_relu, num_ch_in, num_ch_out, 3, 1, 1))
-                );
-            num_ch_in = num_ch_dec[i];
-            if(use_skips && i>0){
-                num_ch_in = num_ch_enc[i-1];
-            }
-            num_ch_out = num_ch_dec[i];
-            decoder_conv.push_back(
-                register_module("upconv_1"+std::to_string(i), conv_block(use_relu, num_ch_in, num_ch_out, 3, 1, 1))
-                );
-        }
+            return disps[0];
+        };
 
-        for(int i = 0; i <4; ++i){
-            decoder_conv.push_back(
-                register_module("disconv"+std::to_string(i), conv_block(use_relu, num_ch_dec[i+1], 1, 3, 1, 1))
-            );
-        }
+        template <>
+        std::vector<torch::Tensor> MonodepthImpl::forward( torch::Tensor x){
+            assert(is_training())
+            std::vector<torch::Tensor> features = backbone->forward(x);
+            std::vector<torch::Tensor> disps = depthdecoder->forward(features);
 
-        static torch::Tensor sig =  at::sigmoid();
-    }
+            return disps;
+        };
 
-    torch::Tensor forward(std::vector<torch::Tensor> inputs){
-        auto x = inputs[inputs.size()-1];
+        torch::Tensor compute_reprojection_loss(torch::Tensor pred, torch::Tensor target){
+            torch::Tensor abs_diff = torch::abs(target - pred);
+            auto l1_loss = abs_diff.mean(1, True);
 
-        for(int i=4; i>=0; i--){
-            x = 
+            torch::Tensor ssim_loss = SSIM(pred, target);
+            ssim_loss = ssim_loss.mean(1, True);
 
-        }
+            torch::Tensor reprojection_loss = 0.85*ssim_loss +0.15*l1_loss;
 
+            return reprojection_loss;
+
+        };
+        
+            
 
     }
-
-
-
 }

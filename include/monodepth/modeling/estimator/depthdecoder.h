@@ -13,7 +13,13 @@ namespace monodepth{
                 T forward(torch::Tensor x);
 
             private:
-                Backbone backbone;     
+                Backbone backbone;
+
+                std::vector<int64_t> num_ch_enc;
+                std::vector<int64_t> num_ch_dec;
+                bool use_skips;
+
+
                 
         };
         TORCH_MODULE(DepthDecoder);

@@ -14,6 +14,7 @@ namespace monodepth{
               T forward(std::vector<torch::Tensor> inputs);
             private:
               Backbone backbone; 
+              
               torch::nn::Conv2d squeeze_0{nullptr};
               torch::nn::Conv2d pose_0{nullptr};
               torch::nn::Conv2d pose_1{nullptr};

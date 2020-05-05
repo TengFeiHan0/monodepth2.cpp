@@ -24,20 +24,7 @@ namespace monodepth{
             return disps;
         };
 
-        torch::Tensor compute_reprojection_loss(torch::Tensor pred, torch::Tensor target){
-            torch::Tensor abs_diff = torch::abs(target - pred);
-            auto l1_loss = abs_diff.mean(1, True);
-
-            torch::Tensor ssim_loss = SSIM(pred, target);
-            ssim_loss = ssim_loss.mean(1, True);
-
-            torch::Tensor reprojection_loss = 0.85*ssim_loss +0.15*l1_loss;
-
-            return reprojection_loss;
-
-        };
-        
-            
+       
 
     }
 }

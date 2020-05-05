@@ -6,9 +6,9 @@ namespace monodepth{
     namespace modeling{
         DepthDecoderImpl::DepthDecoderImpl():backbone(register_module("backbone", BuildBackbone())){
 
-            std::vector<int64_t> num_ch_enc = monodepth::config::GetCFG<std::vector<int64_t>>({"MODEL","DEPTH", "NUM_CH_ENC"});
-            std::vector<int64_t> num_ch_dec = monodepth::config::GetCFG<std::vector<int64_t>>({"MODEL","DEPTH", "NUM_CH_DEC"});
-            bool use_skips = monodepth::config::GetCFG<bool>({"MODEL", "DEPTH", "USE_SKIPS"});
+            num_ch_enc = monodepth::config::GetCFG<std::vector<int64_t>>({"MODEL","DEPTH", "NUM_CH_ENC"});
+            num_ch_dec = monodepth::config::GetCFG<std::vector<int64_t>>({"MODEL","DEPTH", "NUM_CH_DEC"});
+            use_skips = monodepth::config::GetCFG<bool>({"MODEL", "DEPTH", "USE_SKIPS"});
 
             for(int i=4; i>=0; i--) {
                 if(i==4){

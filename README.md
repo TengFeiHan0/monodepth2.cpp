@@ -1,5 +1,5 @@
 # Monodepth2.cpp
-This is a pure C++ implementation of a very popular depth estimation network named monodepth2. This entire project is totally based on Libtorch. 
+ 
 
 ## torchscript demo
 

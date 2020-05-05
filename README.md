@@ -14,7 +14,7 @@
 
 You can download the entire [raw KITTI dataset](http://www.cvlibs.net/datasets/kitti/raw_data.php) by running:
 ```shell
-wget -i splits/kitti_archives_to_download.txt -P kitti_data/
+wget -i kitti_archives_to_download.txt -P kitti_data/
 ```
 Then unzip with
 ```shell

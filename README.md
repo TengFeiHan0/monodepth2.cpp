@@ -1,7 +1,7 @@
 # Monodepth2.cpp
-This is a simple inference implementation for a well-known depth estimation network written in C++. The whole project is based on libtorch API.
+This is a pure C++ implementation of a very popular depth estimation network named monodepth2. This entire project is totally based on Libtorch. 
 
-## steps to run this simple project
+## torchscript demo
 
 1. download related libraries including OpenCV and [libtorch](https://pytorch.org/get-started/locally/).
 2. download my converted torchscript model or convert your trained model into torchscript by yourself. If you don't familiar with torchscript currently, please check the offical [docs](https://pytorch.org/tutorials/advanced/cpp_export.html)

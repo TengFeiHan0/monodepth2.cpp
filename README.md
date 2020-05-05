@@ -1,5 +1,33 @@
 # Monodepth2.cpp
+
+## ⏳ Training
+
+
+
+**Monocular training:**
+```shell
+
+```
+
  
+## 💾 KITTI training data
+
+You can download the entire [raw KITTI dataset](http://www.cvlibs.net/datasets/kitti/raw_data.php) by running:
+```shell
+wget -i splits/kitti_archives_to_download.txt -P kitti_data/
+```
+Then unzip with
+```shell
+cd kitti_data
+unzip "*.zip"
+cd ..
+```
+**Warning:** it weighs about **175GB**, so make sure you have enough space to unzip too!
+
+Our default settings expect that you have converted the png images to jpeg with this command, **which also deletes the raw KITTI `.png` files**:
+```shell
+find kitti_data/ -name '*.png' | parallel 'convert -quality 92 -sampling-factor 2x2,1x1,1x1 {.}.png {.}.jpg && rm {}'
+```
 
 # Torchscript demo
 

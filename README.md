@@ -28,6 +28,17 @@ Our default settings expect that you have converted the png images to jpeg with 
 ```shell
 find kitti_data/ -name '*.png' | parallel 'convert -quality 92 -sampling-factor 2x2,1x1,1x1 {.}.png {.}.jpg && rm {}'
 ```
+## To Do
+- [] add train & inference script
+- [] add kitti dataloader
+- [] distributed training
+- [x] add loss function
+- [] add log printing
+
+## References
+- [monodepth2](https://github.com/nianticlabs/monodepth2)
+- [maskrcnn-benchmark](https://github.com/facebookresearch/maskrcnn-benchmark)
+- [maskrcn-benchmark.cpp](https://github.com/lsrock1/maskrcnn_benchmark.cpp)
 
 # Torchscript demo
 
@@ -53,3 +64,4 @@ you could follow ```to_jit.py ``` to create your own torchscript model and use m
 ## onnx
 we also offer a onnx file that could be accerlated with TensorRT. The related demo code will be released soon.\
 [packnet-sfm]()(ONNX)
+

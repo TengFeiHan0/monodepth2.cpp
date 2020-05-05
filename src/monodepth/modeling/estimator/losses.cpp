@@ -1,14 +1,59 @@
 #include <torch/torch.h>
 #include "losses.h"
+#include "defaults.h"
 
-namespace modeling{
+using namespace F = torch::nn::functional;
+namespace monodepth{
     namespace modeling{
+        std::map<std::string, torch::Tensor> compute_losses(std::map<std::string, torch::Tensor> &inputs, std::map<std::string, torch::Tensor> &outputs){
+            std::map<std::string, torch::Tensor> losses;
+            torch::Tensor total_loss =0;
 
-         torch::Tensor compute_reprojection_loss(torch::Tensor pred, torch::Tensor target){
+
+        };
+        
+        std::vector<std::vector<torch::Tensor>>  generate_image_pred( 
+                     std::vector<std::vector<torch::Tensor>> &inputs,std::vector<torch::Tensor> &disps, 
+                     std::map<int, torch::Tensor> &cam_T_cam){
+
+                std::vector<std::vector<torch::Tensor>> sample_img;
+                std::vector<std::vector<torch::Tensor>> recontructed_img;
+            
+                for(int i= 0; i<4; i++){
+                    torch::Tensor disp = disps[i];
+                    int source_scale = i; 
+                    int64_t min_depth =  monodepth::config::GetCFG<int64_t>({"MODEL","DEPTH", "MIN_DEPTH"});
+                    int64_t max_depth = monodepth::config::GetCFG<int64_t>({"MODEL","DEPTH", "MAX_DEPTH"});
+
+                    std::tuple tuple_depth = disp_to_depth(disp, min_depth, max_depth);
+                    torch::Tensor depth = std::get<1>(tuple_depth);
+
+                    for(int j=1; j<=2; j++){
+                        torch::Tensor T = cam_T_cam[j];
+                        int64_t min_depth = 
+                        torch::Tensor cam_points = backproject_depth[source_scale]->forward(depth, inv_K[source_scale]);
+                        torch::Tensor pix_coords = project_3d[source_scale]->forward(cam_points, K[source_scale], T);
+
+                        sample_img[i][j]= pix_coords;
+                        recontructed_img[i][j] = F::grid_sample(inputs[i][j], sample_img[i][j],
+                            F::GridSampleFuncOptions().mode(torch::kBilinear).padding_mode(torch::kBorder)) 
+                        );
+                    }
+
+
+                }
+                return reconstructed_img;
+
+        };
+
+
+
+        torch::Tensor compute_reprojection_loss(torch::Tensor pred, torch::Tensor target){
             torch::Tensor abs_diff = torch::abs(target - pred);
             auto l1_loss = abs_diff.mean(1, True);
 
-            torch::Tensor ssim_loss = SSIM(pred, target);
+            torch::Tensor ssim_loss = monodepth::modeling::SSIM->forward(pred, target);
+
             ssim_loss = ssim_loss.mean(1, True);
 
             torch::Tensor reprojection_loss = 0.85*ssim_loss +0.15*l1_loss;

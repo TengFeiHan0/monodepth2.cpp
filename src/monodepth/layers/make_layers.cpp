@@ -46,13 +46,19 @@ torch::nn::Sequential MakeConv3x3(int64_t in_channels,
                                   bool kaiming_init) {
   torch::nn::Sequential module;
   if(use_refl){
-    model->push_back(torch::nn::ReflectionPad2d(padding=[1, 1, 1, 1]));
+    model->push_back(
+      torch::nn::ReflectionPad2d(
+                torch::nn::ReflectionPad2dOptions({1,1,1,1})
+    );
   }else{
-    model->push_back(torch::nn::ZeroPad2d(padding=[1, 1, 1, 1]));
-  }
+    model->push_back(
+      torch::nn::ZeroPad2d(
+                torch::nn::ZeroPad2dOptions({1,1,1,1})
+    )
+  };
   
 
-  module->push_back(Conv2d(torch::nn::Conv2dOptions(in_channels, out_channels, 3)
+  module->push_back(torch::nn::Conv2d(torch::nn::Conv2dOptions(in_channels, out_channels, 3)
                                         .with_bias(true)));
   if (kaiming_init) {
     for(auto &param : module->named_parameters()){

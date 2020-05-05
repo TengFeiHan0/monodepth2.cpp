@@ -5,9 +5,7 @@
 
 namespace modeling{
     namespace modeling{
-
-        void generate_image_pred(std::map<std::string, torch::Tensor> &inputs, std::map<std::string, torch::Tensor> &outputs);
-
+    
         torch::Tensor compute_reprojection_loss(torch::Tensor pred, torch::Tensor target);
 
         std::map<std::string, torch::Tensor> compute_losses(std::map<std::string, torch::Tensor> &inputs, std::map<std::string, torch::Tensor> &outputs);

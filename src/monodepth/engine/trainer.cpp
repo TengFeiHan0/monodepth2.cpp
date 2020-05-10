@@ -44,25 +44,29 @@ void do_train(){
   string eta_string;
   int days, hours, minutes;
   int checkpoint_period = GetCFG<int>({"SOLVER", "CHECKPOINT_PERIOD"});
+
   cout << "building model\n";
-  GeneralizedRCNN model = BuildDetectionModel();
+  Monodepth model = BuildDepthModel();
   cout << "build complete!\n";
 
   cout << "Making optimizer and scheduler\n";
   ConcatOptimizer optimizer = MakeOptimizer(model);
   ConcatScheduler scheduler = MakeLRScheduler(optimizer, 0);
+
   auto check_point = Checkpoint(model, optimizer, scheduler, output_dir);
   int start_iter = check_point.load(GetCFG<std::string>({"MODEL", "WEIGHT"}));
   int iteration = start_iter;
   scheduler.set_last_epoch(start_iter);
   vector<string> dataset_list = GetCFG<std::vector<std::string>>({"DATASETS", "TRAIN"});
+
+  cout << "building dataset ...\n" << endl;
   Compose transforms = BuildTransforms(true);
   BatchCollator collate = BatchCollator(GetCFG<int>({"DATALOADER", "SIZE_DIVISIBILITY"}));
   int images_per_batch = GetCFG<int64_t>({"SOLVER", "IMS_PER_BATCH"});
-  COCODataset coco = BuildDataset(dataset_list, true);
+  KITTIDataset kitti = BuildDataset(dataset_list, true);
 
-  auto data = coco.map(transforms).map(collate);
-  shared_ptr<torch::data::samplers::Sampler<>> sampler = make_batch_data_sampler(coco, true, start_iter);
+  auto data = kitti.map(transforms).map(collate);
+  shared_ptr<torch::data::samplers::Sampler<>> sampler = make_batch_data_sampler(kitti, true, start_iter);
   
   torch::data::DataLoaderOptions options(images_per_batch);
   options.workers(GetCFG<int64_t>({"DATALOADER", "NUM_WORKERS"}));

@@ -1,7 +1,7 @@
 #pragma once
 #include <torch/torch.h>
 
-namespace rcnn {
+namespace monodepth {
 namespace layers{
 
 torch::nn::Sequential ConvWithKaimingUniform(/*NO GN use_gn=false, */
@@ -18,4 +18,4 @@ torch::nn::Sequential MakeConv3x3(int64_t in_channels,
                                   bool kaiming_init=true);
 
 } // namespace layers
-} // namespace rcnn
+} // namespace monodepth

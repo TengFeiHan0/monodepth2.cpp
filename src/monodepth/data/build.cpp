@@ -28,11 +28,13 @@ namespace data{
 COCODataset BuildDataset(std::vector<std::string> dataset_list, bool is_train){
   assert(dataset_list.size() == 1);
   monodepth::config::DatasetCatalog dataset_catalog = monodepth::config::DatasetCatalog();
-  std::string dataset_name, img_dir, ann_file;
-  std::tie(dataset_name, img_dir, ann_file) = dataset_catalog[dataset_list[0]];
+  std::string dataset_name, img_dir;
+  std::tie(dataset_name, img_dir) = dataset_catalog[dataset_list[0]];
 
   if(dataset_name.compare("COCODataset") == 0)
     return COCODataset(ann_file, img_dir, is_train);
+  else if(dataset_name.compare("CityScapesDataset")==0)
+    return CityScapesDataset(img_dir);
   else
     assert(false);
 }

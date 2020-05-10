@@ -27,13 +27,13 @@ namespace monodepth{
               
         std::tuple<std::vector<torch::Tensor>, std::vector<torch::Tensor>> PoseDecoderImpl::forward(std::vector<torch::Tensor> inputs){
             
-            auto x = torch::cat(inputs,1);
+            auto x = at::cat(at::TensorList(inputs),1);
             std::vector<torch::Tensor> features = backbone->forward(x);
             std::vector<torch::Tensor> cat_features;
             for(auto x : features){
                 cat_features.push_back(torch::relu(squeeze_0->forward(x));
             }
-            auto out = torch::cat(cat_features,1);
+            auto out = at::cat(at::TensorList(cat_features),1);
 
             out = torch::relu(pose_0->forward(out));
             out = torch::relu(pose_1->forward(out));

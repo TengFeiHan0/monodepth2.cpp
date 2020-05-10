@@ -5,11 +5,72 @@
 using namespace F = torch::nn::functional;
 namespace monodepth{
     namespace modeling{
-        std::map<std::string, torch::Tensor> compute_losses(std::map<std::string, torch::Tensor> &inputs, std::map<std::string, torch::Tensor> &outputs){
+        
+        torch::Tensor get_smooth_loss(torch::Tensor disp, torch::Tensor img){
+
+            torch::Tensor grad_disp_x = torch::abs(disp[:, :, :, :-1] - disp[:, :, :, 1:]);
+            torch::Tensor grad_disp_y = torch::abs(disp[:, :, :-1, :] - disp[:, :, 1:, :]);
+
+            torch::Tensor grad_img_x = torch.mean(torch::abs(img[:, :, :, :-1] - img[:, :, :, 1:]), 1, keepdim=True);
+            torch::Tensor grad_img_y = torch.mean(torch::abs(img[:, :, :-1, :] - img[:, :, 1:, :]), 1, keepdim=True);
+
+            grad_disp_x *= at::exp(-grad_img_x);
+            grad_disp_y *= at::exp(-grad_img_y);
+
+            return grad_disp_x.mean() + grad_disp_y.mean();
+        }
+
+
+
+        std::map<std::string, torch::Tensor> compute_losses( std::vector<std::vector<torch::Tensor>> &inputs,
+                std::vector<torch::Tensor> &disps, std::vector<std::vector<torch::Tensor>> &recontructed_img){
+
             std::map<std::string, torch::Tensor> losses;
             torch::Tensor total_loss =0;
+            for(int i=0; i < 4; i++){
+                torch::Tensor loss =0;
+                std::vector<torch::Tensor> reprojection_losses;
+                int source_scale =i;
+                torch::Tensor disp = disps[i];
+                torch::Tensor color = inputs[i][0];
+                torch::Tensor target = inputs[source_scale][0];
+                for(int j = 1; j <2; ++j){
+                    torch::Tensor pred = recontructed_img[i][j];
+                    reprojection_losses.push_back(compute_reprojection_loss(pred, target));
+                }
+                torch::Tensor reprojection_loss = at::cat(at::TensorList(reprojection_losses),1);
 
+                std::vector<torch::Tensor> identity_reprojection_losses;
+                for(int j=1; j<=2; ++j){
+                    torch::Tensor pred = inputs[source_scale][j];
+                    identity_reprojection_losses.push_back(compute_reprojection_loss(pred, target));
+                }
+                torch::Tensor identity_reprojection_loss = at::cat(at::TensorList(identity_reprojection_losses),1);
+                
+                identity_reprojection_loss +=torch::randn(identity_reprojection_loss.shape).cuda()*0.00001;
 
+                torch::Tensor combined = at::cat((identity_reprojection_loss, reprojection_loss), 1);
+                if(combined.shape[1]==1){
+                    torch::Tensor to_optimize = combined;
+                }else{
+                    std::tuple optimize_and_idxs = at::min(combined, 1);
+                    torch::Tensor to_optimize = std::get<0>(optimize_and_idxs);
+                    torch::Tensor idxs = std::get<1>(optimize_and_idxs);
+                }
+                loss += to_optimize.mean();
+
+                torch::Tensor mean_disp = disp.mean(2,True).mean(3, True);
+                torch::Tensor norm_disp = disp / (mean_disp +1e-7);
+                torch::Tensor smooth_loss = get_smooth_loss(norm_disp, color);
+                int64_t smooth_weight =  monodepth::config::GetCFG<int64_t>({"MODEL","DEPTH", "SMOOTH_WEIGHT"});
+
+                loss += smooth_weight * smooth_loss / (2**i);
+                total_loss +=loss;
+            }
+            total_loss /=4;
+            losses["loss"] = total_loss
+
+            return losses;
         };
         
         std::vector<std::vector<torch::Tensor>>  generate_image_pred( 
@@ -46,7 +107,7 @@ namespace monodepth{
 
         };
 
-
+        
 
         torch::Tensor compute_reprojection_loss(torch::Tensor pred, torch::Tensor target){
             torch::Tensor abs_diff = torch::abs(target - pred);

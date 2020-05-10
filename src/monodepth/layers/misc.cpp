@@ -84,7 +84,8 @@ namespace monodepth {
         
     BackprojectDepthImpl::BackprojectDepthImpl(int batch_size, int height, int width):batch_size_(batch_size), height_(height), width_(width){
       std::vector<torch::Tensor> meshGrid = at::meshgrid(width_, height_);
-      torch::Tensor id_coords = at::stack(meshGrid,dim=0);
+
+      torch::Tensor id_coords = at::stack(at::TensorList(meshGrid),dim=0);
 
     }
 

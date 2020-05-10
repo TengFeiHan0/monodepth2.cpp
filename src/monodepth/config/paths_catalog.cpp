@@ -17,12 +17,18 @@ const std::map<std::string, args> DatasetCatalog::DATASETS{
   {"coco_2014_val",
     args{{"img_dir", "coco/val2014"}, {"ann_file", "coco/annotations/instances_val2014.json"}}},
   {"coco_2014_minival",
-    args{{"img_dir", "coco/val2014"}, {"ann_file", "coco/annotations/instances_valminusminival2014.json"}}}
+    args{{"img_dir", "coco/val2014"}, {"ann_file", "coco/annotations/instances_valminusminival2014.json"}}},
+  {"cityscapes",
+    args{{"img_dir", "cityscapes/images"}, {"ann_file", ""}}},
+
 };
 
 std::tuple<std::string, std::string, std::string> DatasetCatalog::operator[](std::string name){
   if(name.find("coco") != std::string::npos){
     return std::make_tuple("COCODataset", DATA_DIR + "/" + DatasetCatalog::DATASETS.at(name).at("img_dir"), DATA_DIR + "/" + DatasetCatalog::DATASETS.at(name).at("ann_file"));
+  }
+  else if(name.find("cityscapes")!=std::string::npos){
+    return std::make_tuple("CityScapesDataset", DATA_DIR + "/" + DatasetCatalog::DATASETS.at(name).at("img_dir"));
   }
   //no voc
   assert(false);

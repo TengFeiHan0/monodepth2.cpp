@@ -5,7 +5,7 @@
 namespace monodepth{
 namespace solver{
 
-ConcatOptimizer MakeOptimizer(monodepth::modeling::GeneralizedRCNN& model){
+ConcatOptimizer MakeOptimizer(monodepth::modeling::Monodepth& model){
   return ConcatOptimizer(model->named_parameters(), 
                         monodepth::config::GetCFG<double>({"SOLVER", "BASE_LR"}),
                         monodepth::config::GetCFG<double>({"SOLVER", "MOMENTUM"}),

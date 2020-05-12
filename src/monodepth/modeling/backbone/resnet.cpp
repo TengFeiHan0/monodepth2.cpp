@@ -155,7 +155,7 @@ BottleneckImpl::BottleneckImpl(
     int64_t down_stride = (dilation == 1 ? stride : 1);
     downsample_ = register_module("downsample", torch::nn::Sequential(
       monodepth::layers::Conv2d(
-        torch::nn::Conv2dOptions(in_channels, out_channels, 1).stride(down_stride).with_bias(false)
+        torch::nn::Conv2dOptions(in_channels, out_channels, 1).stride(down_stride).bias(false)
       ),
       monodepth::layers::FrozenBatchNorm2d(out_channels)
     )
@@ -181,7 +181,7 @@ BottleneckImpl::BottleneckImpl(
   }
 
   conv1_ = register_module(
-    "conv1", monodepth::layers::Conv2d(torch::nn::Conv2dOptions(in_channels, bottleneck_channels, 1).stride(stride_1x1).with_bias(false))
+    "conv1", monodepth::layers::Conv2d(torch::nn::Conv2dOptions(in_channels, bottleneck_channels, 1).stride(stride_1x1).bias(false))
   );
   bn1_ = register_module("bn1", monodepth::layers::FrozenBatchNorm2d(bottleneck_channels));
 
@@ -190,7 +190,7 @@ BottleneckImpl::BottleneckImpl(
       torch::nn::Conv2dOptions(bottleneck_channels, bottleneck_channels, 3)
         .stride(stride_3x3)
         .padding(dilation)
-        .with_bias(false)
+        .bias(false)
         .groups(num_groups)
         .dilation(dilation)
     )
@@ -198,7 +198,7 @@ BottleneckImpl::BottleneckImpl(
   
   bn2_ = register_module("bn2", monodepth::layers::FrozenBatchNorm2d(bottleneck_channels));
 
-  conv3_ = register_module("conv3", monodepth::layers::Conv2d(torch::nn::Conv2dOptions(bottleneck_channels, out_channels, 1).with_bias(false)));
+  conv3_ = register_module("conv3", monodepth::layers::Conv2d(torch::nn::Conv2dOptions(bottleneck_channels, out_channels, 1).bias(false)));
   bn3_ = register_module("bn3", monodepth::layers::FrozenBatchNorm2d(out_channels));
   torch::nn::init::kaiming_uniform_(conv1_->weight, 1);
   torch::nn::init::kaiming_uniform_(conv2_->weight, 1);
@@ -224,7 +224,7 @@ torch::Tensor BottleneckImpl::forward(torch::Tensor x) {
 BaseStemImpl::BaseStemImpl() {
   int64_t out_channels = monodepth::config::GetCFG<int64_t>({"MODEL", "RESNETS", "STEM_OUT_CHANNELS"});
   conv1_ = register_module(
-    "conv1", monodepth::layers::Conv2d(torch::nn::Conv2dOptions(3, out_channels, 7).stride(2).padding(3).with_bias(false))
+    "conv1", monodepth::layers::Conv2d(torch::nn::Conv2dOptions(3, out_channels, 7).stride(2).padding(3).bias(false))
   );
 
   bn1_ = register_module("bn1", monodepth::layers::FrozenBatchNorm2d(out_channels));

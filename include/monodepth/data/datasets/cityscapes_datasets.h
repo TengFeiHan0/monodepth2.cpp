@@ -13,10 +13,10 @@ namespace monodepth{
 
         struct Image{
             cv::Mat img_pre;
-            cv::Mat img_cur;
             cv::Mat img_next;
             int img_width;
             int img_height;
+            std::vector<float> img_K;
         };
 
         class CityScapesDataset: public torch::data::datasets::Dataset<CityScapesDataset, torch::data::Example<cv::Mat, monodepth::data::Image>> {

@@ -1,6 +1,6 @@
 #include "make_layers.h"
 #include "defaults.h"
-#include "depthdecoder.h"
+#include "estimator/depthdecoder.h"
 
 namespace monodepth{
     namespace modeling{
@@ -45,13 +45,13 @@ namespace monodepth{
         };
 
         template <>
-        std::vector<torch::Tensor> MonodepthImpl::forward(torch::Tensor x){
-            assert(is_training())
+        std::vector<torch::Tensor> DepthDecoderImpl::forward(torch::Tensor x){
+            assert(is_training());
             std::vector<torch::Tensor> disps;
             
-            std::vector<torch::Tensor> features = backward->forward(x);
+            std::vector<torch::Tensor> features = backbone->forward(x);
 
-            auto x = features[features.size()-1];
+            x = features[features.size()-1];
 
             for(int i=4; i>=0; i--){
                 x = up_Conv_0[i]->forward(x);
@@ -63,8 +63,8 @@ namespace monodepth{
                 x = up_Conv_1[i]->forward(x);
                 if(i>0){
                     disps.push_back(
-                        at::sigmoid(disp_Conv[i]->forward(x));
-                    )
+                        at::sigmoid(disp_Conv[i]->forward(x))
+                    );
                 }
                 
             }
@@ -73,13 +73,13 @@ namespace monodepth{
         }
 
         template <>
-        torch::Tensor MonodepthImpl::forward(torch::Tensor x){
-            assert(!is_training())
+        torch::Tensor DepthDecoderImpl::forward(torch::Tensor x){
+            assert(!is_training());
             std::vector<torch::Tensor> disps;
             
-            std::vector<torch::Tensor> features = backward->forward(x);
+            std::vector<torch::Tensor> features = backbone->forward(x);
 
-            auto x = features[features.size()-1];
+             x = features[features.size()-1];
 
             for(int i=4; i>=0; i--){
                 x = up_Conv_0[i]->forward(x);
@@ -91,8 +91,8 @@ namespace monodepth{
                 x = up_Conv_1[i]->forward(x);
                 if(i>0){
                     disps.push_back(
-                        at::sigmoid(disp_Conv[i]->forward(x));
-                    )
+                        at::sigmoid(disp_Conv[i]->forward(x))
+                    );
                 }
                 
             }

@@ -179,7 +179,7 @@ void conv3x3(torch::nn::Sequential& seq,
              int64_t groups, 
              int64_t kernel_size, 
              int64_t padding) {
-  seq->push_back(module_name + "_" + postfix + "/conv", monodepth::layers::Conv2d(torch::nn::Conv2dOptions(in_channels, out_channels, kernel_size).stride(stride).padding(padding).groups(groups).with_bias(false)));
+  seq->push_back(module_name + "_" + postfix + "/conv", monodepth::layers::Conv2d(torch::nn::Conv2dOptions(in_channels, out_channels, kernel_size).stride(stride).padding(padding).groups(groups).bias(false)));
   seq->push_back(module_name + "_" + postfix + "/norm", monodepth::layers::FrozenBatchNorm2d(out_channels));
   seq->push_back(module_name + "_" + postfix + "/relu", torch::nn::Functional(torch::relu));
 }
@@ -193,7 +193,7 @@ void conv1x1(torch::nn::Sequential& seq,
              int64_t groups, 
              int64_t kernel_size, 
              int64_t padding) {
-  seq->push_back(module_name + "_" + postfix + "/conv", monodepth::layers::Conv2d(torch::nn::Conv2dOptions(in_channels, out_channels, kernel_size).stride(stride).padding(padding).groups(groups).with_bias(false)));
+  seq->push_back(module_name + "_" + postfix + "/conv", monodepth::layers::Conv2d(torch::nn::Conv2dOptions(in_channels, out_channels, kernel_size).stride(stride).padding(padding).groups(groups).bias(false)));
   seq->push_back(module_name + "_" + postfix + "/norm", monodepth::layers::FrozenBatchNorm2d(out_channels));
   seq->push_back(module_name + "_" + postfix + "/relu", torch::nn::Functional(torch::relu));
 }

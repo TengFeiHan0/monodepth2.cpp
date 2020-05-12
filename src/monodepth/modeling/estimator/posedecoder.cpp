@@ -1,6 +1,6 @@
 #include "make_layers.h"
 #include "defaults.h"
-#include "posedecoder.h"
+#include "estimator/posedecoder.h"
 
 namespace monodepth{
     namespace modeling{

@@ -15,8 +15,14 @@ namespace monodepth{
             private:
                 Backbone backbone;
 
+                std::vector<torch::nn::Sequential> up_Conv_0;
+                std::vector<torch::nn::Sequential> up_Conv_1;
+                std::vector<torch::nn::Sequential> disp_Conv;
+
                 std::vector<int64_t> num_ch_enc;
                 std::vector<int64_t> num_ch_dec;
+                int64_t num_ch_in;
+                int64_t num_ch_out;
                 bool use_skips;
 
 
@@ -25,10 +31,10 @@ namespace monodepth{
         TORCH_MODULE(DepthDecoder);
 
         template<>
-        std::vector<torch::Tensor> MonodepthImpl::forward(torch::Tensor x);
+        std::vector<torch::Tensor> DepthDecoderImpl::forward(torch::Tensor x);
 
         template<>
-        torch::Tensor MonodepthImpl::forward(torch::Tensor x);
+        torch::Tensor DepthDecoderImpl::forward(torch::Tensor x);
 
         DepthDecoder BuildDepthDecoderModule();
     }

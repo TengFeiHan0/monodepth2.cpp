@@ -21,9 +21,8 @@ private:
 TORCH_MODULE(Backbone);
 
 Backbone BuildResnetBackbone();
-Backbone BuildResnetFPNBackbone();
+
 Backbone BuildBackbone();
-Backbone BuildVoVNetFPNBackbone();
 
 }
 }

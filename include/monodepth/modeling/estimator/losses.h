@@ -3,7 +3,7 @@
 #include <vector>
 #include <torch/torch.h>
 
-namespace modeling{
+namespace monodepth{
     namespace modeling{
     
         torch::Tensor compute_reprojection_loss(torch::Tensor pred, torch::Tensor target);

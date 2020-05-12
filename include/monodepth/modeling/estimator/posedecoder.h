@@ -5,7 +5,7 @@
 
 namespace monodepth{
     namespace modeling{
-        struct PoseDecoder : public torch::nn::Module{
+        struct PoseDecoderImpl : public torch::nn::Module{
 
             public:
               PoseDecoderImpl();

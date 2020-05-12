@@ -53,10 +53,7 @@ void SetCFGFromFile(const std::string file_path){
   SetNode((*cfg)["MODEL"]["BACKBONE"]["FREEZE_CONV_BODY_AT"], 2);
   //SetNode((*cfg)["MODEL"]["BACKBONE"]["USE_GN"], false);
   
-  //FPN
-  SetNode((*cfg)["MODEL"]["FPN"], YAML::Node());
-  //SetNode((*cfg)["MODEL"]["FPN"]["USE_GN"], false);
-  SetNode((*cfg)["MODEL"]["FPN"]["USE_RELU"], false);
+ 
   
 
   //Group Norm

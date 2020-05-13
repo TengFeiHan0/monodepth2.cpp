@@ -1,7 +1,7 @@
 #include <torch/torch.h>
 #include <iostream>
 #include <cassert>
-
+#include "misc.h"
 namespace monodepth {
   namespace layers {
 
@@ -89,29 +89,92 @@ namespace monodepth {
       return M_tensor;
     }
         
-    // BackprojectDepthImpl::BackprojectDepthImpl(int batch_size, int height, int width):batch_size_(batch_size), height_(height), width_(width){
-    //   std::vector<torch::Tensor> meshGrid = at::meshgrid(width_, height_);
+    BackprojectDepthImpl::BackprojectDepthImpl(int batch_size, int64_t height, int64_t width):batch_size_(batch_size), height_(height), width_(width){
+      torch::Tensor shift_x = torch::arange(0, width_);
+      torch::Tensor shift_y = torch::arange(0, height_);
+      std::vector<torch::Tensor> meshGrid = at::meshgrid({shift_x, shift_y});
 
-    //   torch::Tensor id_coords = at::stack(at::TensorList(meshGrid),dim=0);
+      torch::Tensor id_coords = at::stack(at::TensorList(meshGrid),0).set_requires_grad(false);
 
-    // }
+      ones = at::ones((batch_size_, height_, width_)).set_requires_grad(false);
+      torch::Tensor ling = at::zeros({0});
+      pix_coords = at::stack(at::TensorList({id_coords[0].view(-1), id_coords[1].view(-1), ling})); 
+      pix_coords = at::unsqueeze(pix_coords, 0);
+      pix_coords = pix_coords.repeat({batch_size_, 1,1});
+      pix_coords = at::cat({pix_coords, ones}, 1).set_requires_grad(false);
 
-    // Project3DImpl::Project3DImpl(int batch_size, int height, int width, int64_t eps):
-    //     batch_size_(batch_size), height_(height), width_(width),eps_(eps){}
+    }
+
+    torch::Tensor BackprojectDepthImpl::forward(torch::Tensor depth, torch::Tensor inv_K){
+      torch::Tensor cam_points = at::matmul(inv_K[0,3][0,3], pix_coords);
+      cam_points = depth.view({batch_size_,1, -1})*cam_points;
+      cam_points = at::cat({cam_points, ones},1);
+
+      return cam_points;
+    }
+
+    Project3DImpl::Project3DImpl(int batch_size, int height, int width, int64_t eps):
+        batch_size_(batch_size), height_(height), width_(width),eps_(eps){}
       
-    // torch::Tensor Project3DImpl::forward(torch::Tensor points, torch::Tensor K, torch::Tensor T){
-    //   torch::Tensor P = at::matmul(K, T);
-    //   torch::Tensor cam_points = at::matmul(P, points);
+    torch::Tensor Project3DImpl::forward(torch::Tensor points, torch::Tensor K, torch::Tensor T){
+      torch::Tensor P = at::matmul(K, T);
+      torch::Tensor cam_points = at::matmul(P, points);
 
-    //   torch::Tensor pix_coords = cam_points[:, :2, :] / (cam_points[:, 2, :].unsqueeze(1) + eps_);
-    //   pix_coords = pix_coords.view(batch_size_, 2, height_, width_);
-    //   pix_coords = pix_coords.permute(0, 2, 3, 1);
-    //   pix_coords[0] /= width_ - 1;
-    //   pix_coords[1] /= height_ - 1;
-    //   pix_coords = (pix_coords - 0.5) * 2;
+      torch::Tensor pix_coords = cam_points / (cam_points.unsqueeze(1) + eps_);
+      pix_coords = pix_coords.view({batch_size_, 2, height_, width_});
+      pix_coords = pix_coords.permute({0, 2, 3, 1});
+      pix_coords[0] /= width_ - 1;
+      pix_coords[1] /= height_ - 1;
+      pix_coords = (pix_coords - 0.5) * 2;
 
-    //   return pix_coords;
-    // }
+      return pix_coords;
+    }
+    
+    SSIMImpl::SSIMImpl(){
+
+        mu_x_pool = register_module("mu_x_pool", torch::nn::AvgPool2d(
+            torch::nn::AvgPool2dOptions({3,3}).stride({1,1})
+        ));
+        mu_y_pool = register_module("mu_y_pool",torch::nn::AvgPool2d(
+            torch::nn::AvgPool2dOptions({3,3}).stride({1,1})
+        ));
+        sig_x_pool = register_module("sig_x_pool",torch::nn::AvgPool2d(
+            torch::nn::AvgPool2dOptions({3,3}).stride({1,1})
+        ));
+        sig_y_pool = register_module("sig_y_pool",torch::nn::AvgPool2d(
+            torch::nn::AvgPool2dOptions({3,3}).stride({1,1})
+        ));
+        sig_xy_pool = register_module("sig_xy_pool",torch::nn::AvgPool2d(
+            torch::nn::AvgPool2dOptions({3,3}).stride({1,1})
+        ));
+
+        refl = register_module("refl", torch::nn::ReflectionPad2d(
+            torch::nn::ReflectionPad2dOptions({1,1,1,1})
+        ));
+
+        C1 = 0.01*0.01;
+        C2 = 0.03*0.03;
+
+    }
+
+    torch::Tensor SSIMImpl::forward(torch::Tensor x, torch::Tensor y){
+        x = refl->forward(x);
+        y = refl->forward(y);
+
+        auto mu_x = mu_x_pool->forward(x);
+        auto mu_y = mu_y_pool->forward(y);
+
+        auto sigma_x = sig_x_pool->forward(x*x) - mu_x*mu_x;  
+        auto sigma_y = sig_y_pool->forward(y*y) - mu_y*mu_y;
+        auto sigma_xy = sig_xy_pool->forward(x*y) - mu_x*mu_y;
+
+        auto SSIM_n = (2 * mu_x * mu_y + C1) * (2 * sigma_xy + C2);
+        auto SSIM_d = (mu_x*mu_x+ mu_y*mu_y + C1) * (sigma_x + sigma_y + C2);
+
+        return torch::clamp((1 - SSIM_n/SSIM_d)/2, 0,1);
+
+    }
+
 
   }
 }

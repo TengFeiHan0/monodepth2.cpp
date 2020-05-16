@@ -1,0 +1,12 @@
+[submodule "lib/opencv"]
+	path = lib/opencv
+	url = https://github.com/opencv/opencv
+[submodule "lib/gtest"]
+	path = lib/gtest
+	url = https://github.com/google/googletest
+[submodule "lib//rapidjson"]
+	path = lib//rapidjson
+	url = https://github.com/Tencent/rapidjson
+[submodule "lib/yaml-cpp"]
+	path = lib/yaml-cpp
+	url = https://github.com/jbeder/yaml-cpp

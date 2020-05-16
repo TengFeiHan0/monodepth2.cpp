@@ -1,6 +1,3 @@
-[submodule "googletest"]
-	path = googletest
-	url = https://github.com/google/googletest
 [submodule "opencv"]
 	path = opencv
 	url = https://github.com/opencv/opencv

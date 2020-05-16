@@ -18,7 +18,7 @@ void SetCFGFromFile(const std::string file_path){
   SetNode((*cfg)["MODEL"]["RETINANET_ON"], false);
   SetNode((*cfg)["MODEL"]["KEYPOINT_ON"], false);
   SetNode((*cfg)["MODEL"]["DEVICE"], "cuda");
-  SetNode((*cfg)["MODEL"]["META_ARCHITECTURE"], "GeneralizedRCNN");
+  SetNode((*cfg)["MODEL"]["META_ARCHITECTURE"], "Monodepth");
   SetNode((*cfg)["MODEL"]["CLS_AGNOSTIC_BBOX_REG"], false);
   SetNode((*cfg)["MODEL"]["WEIGHT"], "");
   //input
@@ -39,8 +39,8 @@ void SetCFGFromFile(const std::string file_path){
 
   //DATASET
   SetNode((*cfg)["DATASETS"], YAML::Node());
-  SetNode((*cfg)["DATASETS"]["TRAIN"], "(COCO, )");
-  SetNode((*cfg)["DATASETS"]["TEST"], "(COCO, )");
+  SetNode((*cfg)["DATASETS"]["TRAIN"], "city");
+  SetNode((*cfg)["DATASETS"]["TEST"], "city");
   //DATALOADER
   SetNode((*cfg)["DATALOADER"], YAML::Node());
   SetNode((*cfg)["DATALOADER"]["NUM_WORKERS"], 4);

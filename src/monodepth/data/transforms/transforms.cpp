@@ -20,19 +20,19 @@ Compose::Compose(std::vector<std::shared_ptr<MatToMatTransform>> MtoMtransforms,
                     std::srand(static_cast<unsigned int>(std::time(0)));
                   }
 
-torch::data::Example<torch::Tensor, RCNNData> Compose::operator()(torch::data::Example<cv::Mat, RCNNData> input){
-  torch::data::Example<torch::Tensor, RCNNData> tensor_rcnn;
+torch::data::Example<torch::Tensor, ImageData> Compose::operator()(torch::data::Example<cv::Mat, ImageData> input){
+  torch::data::Example<torch::Tensor, ImageData> tensor_data;
   bool tensor_init = false;
 
   for(auto& MtoM : MtoMtransforms_)
     input = (*MtoM)(input);
   
-  tensor_rcnn = to_tensor(input);
+  tensor_data = to_tensor(input);
 
   for(auto& TtoT : TtoTtransforms_)
-    tensor_rcnn = (*TtoT)(tensor_rcnn);
+    tensor_data = (*TtoT)(tensor_data);
 
-  return tensor_rcnn;    
+  return tensor_data;    
 }
 
 std::pair<int, int> Resize::get_size(std::pair<int, int> image_size){
@@ -59,47 +59,58 @@ std::pair<int, int> Resize::get_size(std::pair<int, int> image_size){
   return std::make_pair(oh, ow);
 }
 
-torch::data::Example<cv::Mat, RCNNData> Resize::operator()(torch::data::Example<cv::Mat, RCNNData> input){
+torch::data::Example<cv::Mat, ImageData> Resize::operator()(torch::data::Example<cv::Mat, ImageData> input){
   int h, w;
   cv::Mat resized;
   std::tie(h, w) = get_size(std::make_pair(input.data.cols, input.data.rows));
   cv::resize(input.data, resized, cv::Size(w, h));
   input.data = resized;
-  input.target.target = input.target.target.Resize(std::make_pair(w, h));
+  input.target.img_cur = resized;
+  cv::resize(input.target.img_pre, input.target.img_pre, cv::Size(w, h));
+  cv::resize(input.target.img_next, input.target.img_next, cv::Size(w, h));
   return input;
 }
 
-torch::data::Example<cv::Mat, RCNNData> RandomHorizontalFlip::operator()(torch::data::Example<cv::Mat, RCNNData> input){
+torch::data::Example<cv::Mat, ImageData> RandomHorizontalFlip::operator()(torch::data::Example<cv::Mat, ImageData> input){
   float r = static_cast <float> (std::rand()) / static_cast <float> (RAND_MAX);
   if(r < prob_){
     cv::Mat flipped;
     cv::flip(input.data, flipped, 1);
     input.data = flipped;
-    input.target.target = input.target.target.Transpose(structures::FLIP_LEFT_RIGHT);
+    //input.target.target = input.target.target.Transpose(structures::FLIP_LEFT_RIGHT);
   }
   return input;
 }
 
-torch::data::Example<cv::Mat, RCNNData> RandomVerticalFlip::operator()(torch::data::Example<cv::Mat, RCNNData> input){
+torch::data::Example<cv::Mat, ImageData> RandomVerticalFlip::operator()(torch::data::Example<cv::Mat, ImageData> input){
   float r = static_cast <float> (std::rand()) / static_cast <float> (RAND_MAX);
   if(r < prob_){
     cv::Mat flipped;
     cv::flip(input.data, flipped, 0);
     input.data = flipped;
-    input.target.target = input.target.target.Transpose(structures::FLIP_TOP_BOTTOM);
+    //input.target.target = input.target.target.Transpose(structures::FLIP_TOP_BOTTOM);
   }
   return input;
 }
 
-torch::data::Example<torch::Tensor, RCNNData> ToTensor::operator()(torch::data::Example<cv::Mat, RCNNData> input){
+torch::data::Example<torch::Tensor, ImageData> ToTensor::operator()(torch::data::Example<cv::Mat, ImageData> input){
   torch::Tensor tensor_image = torch::from_blob(input.data.data, {1, input.data.rows, input.data.cols, 3}, torch::kByte);
   tensor_image = tensor_image.to(torch::kFloat);
-  // cv::Mat warp(input.data.rows, input.data.cols, CV_32FC3, tensor_image.data<float>());
-  // cv::imwrite("../resource/tmp/after_upcast" + std::to_string(input.target.idx) + ".jpg", warp);
   tensor_image = tensor_image.permute({0, 3, 1, 2}).contiguous();
-  // warp = cv::Mat(input.data.rows, input.data.cols, CV_32FC3, tensor_image.permute({0, 2, 3, 1}).contiguous().data<float>());
-  // cv::imwrite("../resource/tmp/after_permute" + std::to_string(input.target.idx) + ".jpg", warp);
-  return torch::data::Example<torch::Tensor, RCNNData> {tensor_image, input.target};
+
+  // input.target.tensor_cur = tensor_image;
+  // //prev
+  // torch::Tensor tensor_image_pre = torch::from_blob(input.target.img_pre.data, {1, input.target.img_pre.rows, input.target.img_pre.cols, 3}, torch::kByte);
+  // tensor_image_pre = tensor_image_pre.to(torch::kFloat);
+  // tensor_image_pre = tensor_image_pre.permute({0, 3, 1, 2}).contiguous();
+  // input.target.tensor_pre = tensor_image_pre;
+  // //next
+  // torch::Tensor tensor_image_next = torch::from_blob(input.target.img_next.data, {1, input.target.img_next.rows, input.target.img_next.cols, 3}, torch::kByte);
+  // tensor_image_next = tensor_image_next.to(torch::kFloat);
+  // tensor_image_next = tensor_image_next.permute({0, 3, 1, 2}).contiguous();
+  // input.target.tensor_next = tensor_image_next;
+
+  return torch::data::Example<torch::Tensor, ImageData> {tensor_image, input.target};
 }
 
 Normalize::Normalize(torch::ArrayRef<float> mean, torch::ArrayRef<float> stddev, bool to_bgr255)
@@ -113,7 +124,7 @@ Normalize::Normalize(torch::ArrayRef<float> mean, torch::ArrayRef<float> stddev,
                   .unsqueeze(0)),
             to_bgr255_(to_bgr255) {}
 
-torch::data::Example<torch::Tensor, RCNNData> Normalize::operator()(torch::data::Example<torch::Tensor, RCNNData> input){
+torch::data::Example<torch::Tensor, ImageData> Normalize::operator()(torch::data::Example<torch::Tensor, ImageData> input){
   if(!to_bgr255_)
     input.data.div_(255);
   // cv::Mat warp = cv::Mat(input.data.size(2), input.data.size(3), CV_32FC3, input.data.permute({0, 2, 3, 1}).contiguous().data<float>());

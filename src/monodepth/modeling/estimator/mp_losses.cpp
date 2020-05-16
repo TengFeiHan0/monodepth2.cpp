@@ -1,12 +1,14 @@
 #include "estimator/mp_losses.h"
-#include "camera.h"
 #include "depth_utils.h"
 #include "image_utils.h"
+#include "camera.h"
 #include "misc.h"
+#include <iostream>
+#include <memory>
 namespace monodepth{
     namespace modeling{
 
-        MultiViewPhotometricLossImpl::MultiViewPhotometricLossImpl(){};
+        MultiViewPhotometricLossImpl::MultiViewPhotometricLossImpl(){}
          
         // """
         //     Warps a reference image to produce a reconstruction of the original one.
@@ -36,7 +38,8 @@ namespace monodepth{
 
             auto B = shape_op[0], H = shape_op[2], W = shape_op[3];
             int64_t device = ref_image.get_device(); 
-            std::vector<monodepth::data::Camera> cams, ref_cams;
+            std::vector<std::shared_ptr<monodepth::utils::Camera>> cams, ref_cams;
+            
             std::vector<torch::Tensor> depths, ref_warped;
 
             std::vector<torch::Tensor> ref_images = monodepth::utils::match_scales(ref_image, inv_depths, 4);
@@ -45,8 +48,11 @@ namespace monodepth{
                 auto DH = depth_shape[2], DW = depth_shape[3];
 
                 float scale_factor = DW / float(W);
-                cams.push_back(Camera(K= K.float()).scaled(scale_factor).to(device));
-                ref_cams.push_back(Camera(K=ref_K.float(), Tcw=pose).scaled(scale_factor).to(device));
+                std::shared_ptr<monodepth::utils::Camera> cam = std::make_shared<monodepth::utils::Camera>(K, pose);
+               
+                cams.push_back(cam);
+                std::shared_ptr<monodepth::utils::Camera> r_cam= std::make_shared<monodepth::utils::Camera>(ref_K, pose);
+                ref_cams.push_back(r_cam);
 
                 depths.push_back(monodepth::utils::inv2depths(inv_depths[i]));
 
@@ -55,7 +61,7 @@ namespace monodepth{
             }
 
             return ref_warped;
-        };
+        }
 
         std::vector<torch::Tensor> MultiViewPhotometricLossImpl::calc_photometric_loss(std::vector<torch::Tensor> &t_est, std::vector<torch::Tensor> &images){
             
@@ -63,7 +69,7 @@ namespace monodepth{
             for(int i = 0; i < 4; i++){
                 
                 l1_loss.push_back(at::abs(t_est[i]-images[i]));
-                ssim_loss.push_back(SSIM->forward(t_est[i], images[i]));
+                ssim_loss.push_back(monodepth::utils::SSIM(t_est[i],images[i], 1e-4, 9e-4));
                 photometric_loss.push_back( 0.85 * ssim_loss[i].mean(1, true) +
                                 0.15 * l1_loss[i].mean(1, true));
             }

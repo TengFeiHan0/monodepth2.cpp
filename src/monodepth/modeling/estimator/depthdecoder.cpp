@@ -4,6 +4,7 @@
 
 namespace monodepth{
     namespace modeling{
+
         DepthDecoderImpl::DepthDecoderImpl():backbone(register_module("backbone", BuildBackbone())){
 
             num_ch_enc = monodepth::config::GetCFG<std::vector<int64_t>>({"MODEL","DEPTH", "NUM_CH_ENC"});
@@ -41,10 +42,9 @@ namespace monodepth{
                 );
             }
 
+        }
 
-        };
-
-        template <>
+        template<>
         std::vector<torch::Tensor> DepthDecoderImpl::forward(torch::Tensor x){
             assert(is_training());
             std::vector<torch::Tensor> disps;
@@ -72,7 +72,7 @@ namespace monodepth{
             return disps;
         }
 
-        template <>
+        template<>
         torch::Tensor DepthDecoderImpl::forward(torch::Tensor x){
             assert(!is_training());
             std::vector<torch::Tensor> disps;

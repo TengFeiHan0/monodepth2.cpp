@@ -28,13 +28,15 @@ namespace monodepth{
 
                 
         };
-        TORCH_MODULE(DepthDecoder);
+        
 
         template<>
         std::vector<torch::Tensor> DepthDecoderImpl::forward(torch::Tensor x);
 
         template<>
         torch::Tensor DepthDecoderImpl::forward(torch::Tensor x);
+
+        TORCH_MODULE(DepthDecoder);
 
         DepthDecoder BuildDepthDecoderModule();
     }

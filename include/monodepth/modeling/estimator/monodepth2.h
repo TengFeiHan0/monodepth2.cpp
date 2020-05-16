@@ -12,7 +12,7 @@ namespace monodepth{
             MonodepthImpl();
 
             template <typename T>
-            T forward(torch::Tensor x );
+            T forward(torch::Tensor x);
 
             
             private:
@@ -22,7 +22,6 @@ namespace monodepth{
            
             
         };
-        TORCH_MODULE(Monodepth);
 
         template<>
         std::vector<torch::Tensor> MonodepthImpl::forward(torch::Tensor x);
@@ -30,8 +29,8 @@ namespace monodepth{
         template<>
         torch::Tensor MonodepthImpl::forward(torch::Tensor x);
 
-        
+        TORCH_MODULE(Monodepth);
 
-    
+        
     }
 }

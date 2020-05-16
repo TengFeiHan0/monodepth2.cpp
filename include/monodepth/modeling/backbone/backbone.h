@@ -14,8 +14,8 @@ public:
   std::shared_ptr<BackboneImpl> clone(torch::optional<torch::Device> device = torch::nullopt) const;
 
 private:
-  torch::nn::Sequential backbone_;
-  int64_t out_channels_;
+  torch::nn::Sequential backbone_{nullptr};
+  int64_t out_channels_{0};
 };
 
 TORCH_MODULE(Backbone);

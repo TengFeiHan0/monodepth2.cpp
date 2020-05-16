@@ -19,7 +19,7 @@ using namespace std;
 using namespace monodepth::utils;
 
 template<typename Dataset>
-map<int64_t, BoxList> compute_on_dataset(GeneralizedRCNN& model, Dataset& dataset, torch::Device& device, Timer& inference_timer, int total_size){
+map<int64_t, BoxList> compute_on_dataset(Monodepth& model, Dataset& dataset, torch::Device& device, Timer& inference_timer, int total_size){
   torch::NoGradGuard guard;
   model->eval();
   model->to(device);

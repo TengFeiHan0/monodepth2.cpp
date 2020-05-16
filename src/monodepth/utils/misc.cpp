@@ -3,7 +3,7 @@
 #include <cassert>
 #include "misc.h"
 namespace monodepth {
-  namespace layers {
+  namespace utils{
 
     std::tuple<torch::Tensor, torch::Tensor> disp_to_depth(torch::Tensor disp, int64_t min_depth, int64_t max_depth){
         int64_t min_disp = 1 / max_depth;
@@ -130,51 +130,6 @@ namespace monodepth {
       return pix_coords;
     }
     
-    SSIMImpl::SSIMImpl(){
-
-        mu_x_pool = register_module("mu_x_pool", torch::nn::AvgPool2d(
-            torch::nn::AvgPool2dOptions({3,3}).stride({1,1})
-        ));
-        mu_y_pool = register_module("mu_y_pool",torch::nn::AvgPool2d(
-            torch::nn::AvgPool2dOptions({3,3}).stride({1,1})
-        ));
-        sig_x_pool = register_module("sig_x_pool",torch::nn::AvgPool2d(
-            torch::nn::AvgPool2dOptions({3,3}).stride({1,1})
-        ));
-        sig_y_pool = register_module("sig_y_pool",torch::nn::AvgPool2d(
-            torch::nn::AvgPool2dOptions({3,3}).stride({1,1})
-        ));
-        sig_xy_pool = register_module("sig_xy_pool",torch::nn::AvgPool2d(
-            torch::nn::AvgPool2dOptions({3,3}).stride({1,1})
-        ));
-
-        refl = register_module("refl", torch::nn::ReflectionPad2d(
-            torch::nn::ReflectionPad2dOptions({1,1,1,1})
-        ));
-
-        C1 = 0.01*0.01;
-        C2 = 0.03*0.03;
-
-    }
-
-    torch::Tensor SSIMImpl::forward(torch::Tensor x, torch::Tensor y){
-        x = refl->forward(x);
-        y = refl->forward(y);
-
-        auto mu_x = mu_x_pool->forward(x);
-        auto mu_y = mu_y_pool->forward(y);
-
-        auto sigma_x = sig_x_pool->forward(x*x) - mu_x*mu_x;  
-        auto sigma_y = sig_y_pool->forward(y*y) - mu_y*mu_y;
-        auto sigma_xy = sig_xy_pool->forward(x*y) - mu_x*mu_y;
-
-        auto SSIM_n = (2 * mu_x * mu_y + C1) * (2 * sigma_xy + C2);
-        auto SSIM_d = (mu_x*mu_x+ mu_y*mu_y + C1) * (sigma_x + sigma_y + C2);
-
-        return torch::clamp((1 - SSIM_n/SSIM_d)/2, 0,1);
-
-    }
-
 
   }
 }

@@ -39,7 +39,7 @@ CityScapesDataset BuildDataset(std::vector<std::string> dataset_list){
 }
 
 template<>
-std::unique_ptr<torch::data::StatelessDataLoader<CityScapesDataset, torch::data::samplers::RandomSampler>> MakeDataLoader(bool is_train , bool is_distributed, int start_iter){
+std::unique_ptr<torch::data::StatelessDataLoader<CityScapesDataset, torch::data::samplers::RandomSampler>> MakeDataLoader(bool is_train , int start_iter){
 
   std::vector<std::string> dataset_list;
   if(is_train){
@@ -65,8 +65,7 @@ std::unique_ptr<torch::data::StatelessDataLoader<CityScapesDataset, torch::data:
   }
   CityScapesDataset city = BuildDataset(dataset_list);
   auto dataset = city;//.map(transforms); //.map(collate)*?;
-  is_distributed=false;
-  std::shared_ptr<torch::data::samplers::Sampler<>> sampler = make_batch_data_sampler(city, is_train, is_distributed, start_iter);
+  std::shared_ptr<torch::data::samplers::Sampler<>> sampler = make_batch_data_sampler(city, is_train, start_iter);
 
 
   torch::data::DataLoaderOptions options(images_per_batch);

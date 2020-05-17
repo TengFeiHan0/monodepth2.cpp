@@ -10,10 +10,10 @@ namespace data{
 
 BatchCollator::BatchCollator(int size_divisible) :size_divisible_(size_divisible){}
 
-batch BatchCollator::apply_batch(std::vector<torch::data::Example<torch::Tensor, ImageData>> examples)
+batch BatchCollator::apply_batch(std::vector<torch::data::Example<torch::Tensor, DICT>> examples)
 {
   std::vector<torch::Tensor> tensors;
-  std::vector<ImageData> imagedata;
+  std::vector<DICT> imagedata;
   tensors.reserve(examples.size());
   
   for(auto& example : examples){

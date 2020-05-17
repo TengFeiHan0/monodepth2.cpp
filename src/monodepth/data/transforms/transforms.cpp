@@ -20,8 +20,8 @@ Compose::Compose(std::vector<std::shared_ptr<MatToMatTransform>> MtoMtransforms,
                     std::srand(static_cast<unsigned int>(std::time(0)));
                   }
 
-torch::data::Example<torch::Tensor, ImageData> Compose::operator()(torch::data::Example<cv::Mat, ImageData> input){
-  torch::data::Example<torch::Tensor, ImageData> tensor_data;
+torch::data::Example<torch::Tensor, DICT> Compose::operator()(torch::data::Example<cv::Mat, DICT> input){
+  torch::data::Example<torch::Tensor, DICT> tensor_data;
   bool tensor_init = false;
 
   for(auto& MtoM : MtoMtransforms_)
@@ -59,19 +59,19 @@ std::pair<int, int> Resize::get_size(std::pair<int, int> image_size){
   return std::make_pair(oh, ow);
 }
 
-torch::data::Example<cv::Mat, ImageData> Resize::operator()(torch::data::Example<cv::Mat, ImageData> input){
+torch::data::Example<cv::Mat, DICT> Resize::operator()(torch::data::Example<cv::Mat, DICT> input){
   int h, w;
   cv::Mat resized;
   std::tie(h, w) = get_size(std::make_pair(input.data.cols, input.data.rows));
   cv::resize(input.data, resized, cv::Size(w, h));
   input.data = resized;
-  input.target.img_cur = resized;
-  cv::resize(input.target.img_pre, input.target.img_pre, cv::Size(w, h));
-  cv::resize(input.target.img_next, input.target.img_next, cv::Size(w, h));
+  // input.target["img_cur"] = resized;
+  // cv::resize(input.target["img_pre"], input.target["img_pre"], cv::Size(w, h));
+  // cv::resize(input.target["img_next"], input.target["img_next"], cv::Size(w, h));
   return input;
 }
 
-torch::data::Example<cv::Mat, ImageData> RandomHorizontalFlip::operator()(torch::data::Example<cv::Mat, ImageData> input){
+torch::data::Example<cv::Mat, DICT> RandomHorizontalFlip::operator()(torch::data::Example<cv::Mat, DICT> input){
   float r = static_cast <float> (std::rand()) / static_cast <float> (RAND_MAX);
   if(r < prob_){
     cv::Mat flipped;
@@ -82,7 +82,7 @@ torch::data::Example<cv::Mat, ImageData> RandomHorizontalFlip::operator()(torch:
   return input;
 }
 
-torch::data::Example<cv::Mat, ImageData> RandomVerticalFlip::operator()(torch::data::Example<cv::Mat, ImageData> input){
+torch::data::Example<cv::Mat, DICT> RandomVerticalFlip::operator()(torch::data::Example<cv::Mat, DICT> input){
   float r = static_cast <float> (std::rand()) / static_cast <float> (RAND_MAX);
   if(r < prob_){
     cv::Mat flipped;
@@ -93,7 +93,7 @@ torch::data::Example<cv::Mat, ImageData> RandomVerticalFlip::operator()(torch::d
   return input;
 }
 
-torch::data::Example<torch::Tensor, ImageData> ToTensor::operator()(torch::data::Example<cv::Mat, ImageData> input){
+torch::data::Example<torch::Tensor, DICT> ToTensor::operator()(torch::data::Example<cv::Mat, DICT> input){
   torch::Tensor tensor_image = torch::from_blob(input.data.data, {1, input.data.rows, input.data.cols, 3}, torch::kByte);
   tensor_image = tensor_image.to(torch::kFloat);
   tensor_image = tensor_image.permute({0, 3, 1, 2}).contiguous();
@@ -110,7 +110,7 @@ torch::data::Example<torch::Tensor, ImageData> ToTensor::operator()(torch::data:
   // tensor_image_next = tensor_image_next.permute({0, 3, 1, 2}).contiguous();
   // input.target.tensor_next = tensor_image_next;
 
-  return torch::data::Example<torch::Tensor, ImageData> {tensor_image, input.target};
+  return torch::data::Example<torch::Tensor, DICT> {tensor_image, input.target};
 }
 
 Normalize::Normalize(torch::ArrayRef<float> mean, torch::ArrayRef<float> stddev, bool to_bgr255)
@@ -124,7 +124,7 @@ Normalize::Normalize(torch::ArrayRef<float> mean, torch::ArrayRef<float> stddev,
                   .unsqueeze(0)),
             to_bgr255_(to_bgr255) {}
 
-torch::data::Example<torch::Tensor, ImageData> Normalize::operator()(torch::data::Example<torch::Tensor, ImageData> input){
+torch::data::Example<torch::Tensor, DICT> Normalize::operator()(torch::data::Example<torch::Tensor, DICT> input){
   if(!to_bgr255_)
     input.data.div_(255);
   // cv::Mat warp = cv::Mat(input.data.size(2), input.data.size(3), CV_32FC3, input.data.permute({0, 2, 3, 1}).contiguous().data<float>());

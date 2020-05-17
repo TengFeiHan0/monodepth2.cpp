@@ -9,10 +9,7 @@
 namespace monodepth {
 namespace data {
 
-std::shared_ptr<torch::data::samplers::Sampler<>> make_data_sampler(int dataset_size, bool shuffle, bool is_distributed) {
-  if(is_distributed){
-    return std::shared_ptr<torch::data::samplers::Sampler<>>(new torch::data::samplers::DistributedRandomSampler(dataset_size));
-  }
+std::shared_ptr<torch::data::samplers::Sampler<>> make_data_sampler(int dataset_size, bool shuffle) {
   if (shuffle)
     return std::shared_ptr<torch::data::samplers::Sampler<>> (new torch::data::samplers::RandomSampler(dataset_size));
   else
@@ -27,8 +24,7 @@ std::vector<int> _quantize(std::vector<float> x, std::vector<float> bins) {
 }
 
 std::shared_ptr<torch::data::samplers::Sampler<>> make_batch_data_sampler(CityScapesDataset dataset, 
-                                                                          bool is_train,
-                                                                          bool is_distributed,
+                                                                          bool is_train,                                                                        
                                                                           int start_iter) {
   std::shared_ptr<torch::data::samplers::Sampler<>> batch_sampler;
   int64_t images_per_batch;
@@ -47,7 +43,7 @@ std::shared_ptr<torch::data::samplers::Sampler<>> make_batch_data_sampler(CitySc
   }
   bool aspect_grouping = monodepth::config::GetCFG<bool>({"DATALOADER", "ASPECT_RATIO_GROUPING"});
 
-  std::shared_ptr<torch::data::samplers::Sampler<>> sampler = make_data_sampler(dataset.size().value(), shuffle, is_distributed);
+  std::shared_ptr<torch::data::samplers::Sampler<>> sampler = make_data_sampler(dataset.size().value(), shuffle);
   if (!aspect_grouping) {
     batch_sampler = sampler;
   }

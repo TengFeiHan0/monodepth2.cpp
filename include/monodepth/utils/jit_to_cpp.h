@@ -22,7 +22,7 @@ void jit_to_cpp(std::string weight_dir, std::string config_path, std::vector<std
   std::map<std::string, std::string> mapping;
 
   monodepth::config::SetCFGFromFile(config_path);
-  modeling::Monodepth model = modeling::BuildDetectionModel();
+  modeling::SelfDepthModel model = modeling::BuildDetectionModel();
   torch::NoGradGuard guard;
 
   for(auto& weight_file : weight_files){

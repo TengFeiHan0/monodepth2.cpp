@@ -2,34 +2,38 @@
 #include <torch/torch.h>
 #include "estimator/depthdecoder.h"
 #include "estimator/posedecoder.h"
-
+#include "estimator/mp_losses.h"
+#include "datasets/cityscapes_datasets.h"
 namespace monodepth{
     namespace modeling{
         
-        class MonodepthImpl : public torch::nn::Module{
+        class SelfDepthModel : public torch::nn::Module{
 
           public:
-            MonodepthImpl();
+            SelfDepthModel();
 
             template <typename T>
-            T forward(torch::Tensor x);
+            T forward(torch::Tensor input, monodepth::data::DICT target);
 
             
             private:
             DepthDecoder depthdecoder;
             PoseDecoder posedecoder;
 
+            MultiViewPhotometricLoss mp_loss;
+
            
             
         };
 
         template<>
-        std::vector<torch::Tensor> MonodepthImpl::forward(torch::Tensor x);
+        std::map<std::string, torch::Tensor> SelfDepthModel::forward(torch::Tensor input, monodepth::data::DICT target);
         
         template<>
-        torch::Tensor MonodepthImpl::forward(torch::Tensor x);
+        torch::Tensor SelfDepthModel::forward(torch::Tensor input, monodepth::data::DICT target);
 
-        TORCH_MODULE(Monodepth);
+        
+        SelfDepthModel BuildModel();
 
         
     }

@@ -9,7 +9,7 @@
 namespace monodepth{
 namespace utils{
 
-// void Checkpoint::load(monodepth::modeling::Monodepth& model, std::string save_dir, std::string weight_dir){
+// void Checkpoint::load(monodepth::modeling::SelfDepthModel& model, std::string save_dir, std::string weight_dir){
 //   torch::NoGradGuard guard;
 //   std::ifstream f(save_dir + "/last_checkpoint");
 //   if(f.good()){
@@ -59,11 +59,11 @@ namespace utils{
 //     }
 //     assert(!checker);
 //   }
-  
+
 //   std::cout << "Load Complete\n";
 // }
 
-Checkpoint::Checkpoint(monodepth::modeling::Monodepth& model, 
+Checkpoint::Checkpoint(std::shared_ptr<monodepth::modeling::SelfDepthModel> & model, 
                     monodepth::solver::ConcatOptimizer& optimizer, 
                     monodepth::solver::ConcatScheduler& scheduler, 
                     std::string save_dir)
@@ -137,7 +137,7 @@ int Checkpoint::load_from_checkpoint(){
   model_->load(archive);
   optimizer_.load(archive);
   scheduler_.load(archive);
-  
+
   archive.read("iteration", iter, true);
   return iter.item<int>();
 }

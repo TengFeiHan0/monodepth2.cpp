@@ -1,6 +1,6 @@
 
 #include <torch/torch.h>
-
+#include "datasets/cityscapes_datasets.h"
 namespace monodepth{
     namespace modeling{
 
@@ -9,7 +9,7 @@ namespace monodepth{
             public:
               MultiViewPhotometricLossImpl();
 
-              std::map<std::string, torch::Tensor> forward(torch::Tensor image, std::vector<torch::Tensor>&context, 
+              std::map<std::string, torch::Tensor> forward(torch::Tensor image, std::vector<torch::Tensor> &context, 
                                      std::vector<torch::Tensor> &inv_depths, torch::Tensor K, torch::Tensor ref_K, std::vector<torch::Tensor> &poses);
 
             private:

@@ -12,8 +12,10 @@ namespace data{
 CityScapesDataset BuildDataset(std::vector<std::string> dataset_list);
 
 template<typename T>
-T MakeDataLoader(bool is_train=true , bool is_distributed=false, int start_iter=0);
+T MakeDataLoader(bool is_train, int start_iter);
 
+template<>
+std::unique_ptr<torch::data::StatelessDataLoader<CityScapesDataset, torch::data::samplers::RandomSampler>> MakeDataLoader(bool is_train, int start_iter);
 
 }
 }

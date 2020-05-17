@@ -9,9 +9,11 @@ namespace monodepth{
 
             public:
               PoseDecoderImpl();
-
               
-            std::tuple<std::vector<torch::Tensor>, std::vector<torch::Tensor>> forward(std::vector<torch::Tensor> inputs);
+                template<typename T>
+                T forward(std::vector<torch::Tensor> inputs);
+              
+           
             private:
               //note: all variables should be initialized with nullptr(Backbone backbone{nullptr}), 
               //instead of Backbone backbone;
@@ -27,7 +29,10 @@ namespace monodepth{
         };
 
         TORCH_MODULE(PoseDecoder);
-
+        template<>
+        std::tuple<std::vector<torch::Tensor>, std::vector<torch::Tensor>> PoseDecoderImpl::forward(std::vector<torch::Tensor> inputs);
+        template<>
+        std::vector<torch::Tensor> PoseDecoderImpl::forward(std::vector<torch::Tensor> inputs);
         
         PoseDecoder BuildPoseDecoderModule();
 

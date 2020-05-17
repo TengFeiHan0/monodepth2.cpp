@@ -18,7 +18,7 @@ void SetCFGFromFile(const std::string file_path){
   SetNode((*cfg)["MODEL"]["RETINANET_ON"], false);
   SetNode((*cfg)["MODEL"]["KEYPOINT_ON"], false);
   SetNode((*cfg)["MODEL"]["DEVICE"], "cuda");
-  SetNode((*cfg)["MODEL"]["META_ARCHITECTURE"], "Monodepth");
+  SetNode((*cfg)["MODEL"]["META_ARCHITECTURE"], "SelfDepthModel");
   SetNode((*cfg)["MODEL"]["CLS_AGNOSTIC_BBOX_REG"], false);
   SetNode((*cfg)["MODEL"]["WEIGHT"], "");
   //input

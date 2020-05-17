@@ -134,7 +134,7 @@ namespace monodepth{
             std::vector<torch::Tensor> images = monodepth::utils::match_scales(image, inv_depths, 4);
 
             std::vector<torch::Tensor> ref_warped, photometric_loss, ref_images, unwarped_image_loss;
-            for(int i = 0; i < 4; i++){
+            for(int i = 0; i < 2; i++){
                 //Calculate warped images
                 ref_warped = warp_ref_image(inv_depths, context[i], K, ref_K, poses[i]);
                 //Calculate and store image loss

@@ -2,7 +2,7 @@
 #include <torch/torch.h>
 #include "estimator/monodepth2.h"
 #include <solver_build.h>
-
+#include <memory>
 
 namespace monodepth{
 namespace utils{
@@ -10,7 +10,7 @@ namespace utils{
 class Checkpoint{
 
 public:
-  Checkpoint(monodepth::modeling::Monodepth& model, 
+  Checkpoint(std::shared_ptr<monodepth::modeling::SelfDepthModel> & model, 
              monodepth::solver::ConcatOptimizer& optimizer, 
              monodepth::solver::ConcatScheduler& scheduler, 
              std::string save_dir);
@@ -22,10 +22,10 @@ public:
   int load_from_checkpoint();
   void write_checkpoint_file(std::string name);
 
-  static void load(monodepth::modeling::Monodepth& model, std::string save_dir, std::string weight_dir);
+  static void load(monodepth::modeling::SelfDepthModel& model, std::string save_dir, std::string weight_dir);
 
 private:
-  monodepth::modeling::Monodepth& model_;
+  std::shared_ptr<monodepth::modeling::SelfDepthModel> & model_;
   monodepth::solver::ConcatOptimizer& optimizer_;
   monodepth::solver::ConcatScheduler& scheduler_;
   std::string save_dir_;

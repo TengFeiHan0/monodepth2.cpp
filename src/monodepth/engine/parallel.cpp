@@ -1,161 +1,119 @@
-// #include "parallel.h"
-// #include <iostream>
+#include "parallel.h"
+#include <iostream>
 
 
-// namespace monodepth{
-// namespace engine{
+namespace monodepth{
+namespace engine{
 
-// #ifdef WITH_CUDA
+#ifdef WITH_CUDA
 
-// std::vector<std::map<std::string, torch::Tensor>> parallel_apply(
-//     std::vector<torch::nn::ModuleHolder<monodepth::modeling::GeneralizedRCNNImpl>>& modules,
-//     const torch::optional<std::vector<torch::Device>>& devices) {
-// //   TORCH_CHECK(
-// //       modules.size() == inputs.size(), "Must have as many inputs as modules");
-// //   if (devices) {
-// //     TORCH_CHECK(
-// //         modules.size() == devices->size(),
-// //         "Must have as many devices as modules");
-// //   }
+std::vector<std::map<std::string, torch::Tensor>> parallel_apply(
+    std::vector<torch::nn::ModuleHolder<monodepth::modeling::SelfDepthModel>>& modules,
+    const std::vector<torch::Tensor> &inputs,
+    const std::vector<monodepth::data::DICT> &targets,
+    const torch::optional<std::vector<torch::Device>>& devices) {
+    TORCH_CHECK(
+        modules.size() == inputs.size(), "Must have as many inputs as modules");
+    if (devices) {
+      TORCH_CHECK(
+          modules.size() == devices->size(),
+          "Must have as many devices as modules");
+    }
 
-//   std::vector<std::map<std::string, torch::Tensor>> outputs(modules.size());
-//   std::mutex mutex;
+  std::vector<std::map<std::string, torch::Tensor>> outputs(modules.size());
+  std::mutex mutex;
 
-//   // std::exception_ptr can be passed between threads:
-//   // > An instance of std::exception_ptr may be passed to another function,
-//   // > possibly on another thread, where the exception may be rethrown [...].
-//   // https://en.cppreference.com/w/cpp/error/exception_ptr
-//   std::exception_ptr exception;
-//   at::parallel_for(
-//       /*begin=*/0,
-//       /*end=*/modules.size(),
-//       /*grain_size=*/1,
-//       [&modules,&devices, &outputs, &mutex, &exception](
-//           int64_t index, int64_t stop) {
-//         for (; index < stop; ++index) {
-//           try {
-//             std::map<std::string, torch::Tensor> loss_map = modules[index]->forward<std::map<std::string, torch::Tensor>>(inputs[index], targets[index]);
-//             auto to_device = (devices ? (*devices)[index] : inputs[index].get_tensors().device());
-            
-//             //remove TODO
-//             //torch::Tensor loss = torch::zeros({1}).to(to_device).set_requires_grad(true);
-//             for(auto i = loss_map.begin(); i != loss_map.end(); ++i){
-//               if(i == loss_map.begin()){
-//                 loss_map["loss"] = i->second;
-//               }
-//               else{
-//                 loss_map["loss"] = loss_map["loss"] + i->second;
-//               }
-//             }
-//             // loss_map["loss"] = loss;
-//             // output =
-//             //     output.to(devices ? (*devices)[index] : inputs[index].device());
-//             std::lock_guard<std::mutex> lock(mutex);
-//             outputs[index] = loss_map;
-//           } catch (...) {
-//             std::lock_guard<std::mutex> lock(mutex);
-//             if (!exception) {
-//               exception = std::current_exception();
-//             }
-//           }
-//         }
-//       });
+  // std::exception_ptr can be passed between threads:
+  // > An instance of std::exception_ptr may be passed to another function,
+  // > possibly on another thread, where the exception may be rethrown [...].
+  // https://en.cppreference.com/w/cpp/error/exception_ptr
+  std::exception_ptr exception;
+  at::parallel_for(
+      /*begin=*/0,
+      /*end=*/modules.size(),
+      /*grain_size=*/1,
+      [&modules,&devices, &outputs, &mutex, &exception](
+          int64_t index, int64_t stop) {
+        for (; index < stop; ++index) {
+          try {
+            std::map<std::string, torch::Tensor> loss_map = modules[index]->forward<std::map<std::string, torch::Tensor>>(inputs[index], targets[index]);
+          
+            loss_map = loss_map.to(devices ? (*devices)[index] : inputs[index].device());
+            std::lock_guard<std::mutex> lock(mutex);
+            outputs[index] = loss_map;
+          } catch (...) {
+            std::lock_guard<std::mutex> lock(mutex);
+            if (!exception) {
+              exception = std::current_exception();
+            }
+          }
+        }
+      });
 
-//   if (exception) {
-//     std::rethrow_exception(exception);
-//   }
+  if (exception) {
+    std::rethrow_exception(exception);
+  }
 
-//   return outputs;
-// }
-// #endif
+  return outputs;
+}
+#endif
 
-// std::pair<torch::Tensor, std::map<std::string, torch::Tensor>> data_parallel(
-//     monodepth::modeling::Monodepth module,
-//     torch::optional<std::vector<torch::Device>> devices,
-//     torch::optional<torch::Device> output_device,
-//     int64_t dim) {
-//   if (!devices) {
-//     const auto device_count = torch::cuda::device_count();
+std::map<std::string, torch::Tensor> data_parallel(
+    std::shared_ptr<monodepth::modeling::SelfDepthModel> &module,
+    torch::Tensor input, 
+    monodepth::data::DICT &target,
+    torch::optional<std::vector<torch::Device>> devices,
+    torch::optional<torch::Device> output_device,
+    int64_t dim) {
+  if (!devices) {
+    const auto device_count = torch::cuda::device_count();
 
-//     // TORCH_CHECK(
-//     //     device_count > 0, "Expected at least one CUDA device to be available");
-//     devices = std::vector<torch::Device>();
-//     devices->reserve(device_count);
-//     for (size_t index = 0; index < device_count; ++index) {
-//       devices->emplace_back(torch::kCUDA, index);
-//     }
-//   }
-//   if (!output_device) {
-//     output_device = devices->front();
-//   }
+    TORCH_CHECK(
+        device_count > 0, "Expected at least one CUDA device to be available");
+    devices = std::vector<torch::Device>();
+    devices->reserve(device_count);
+    for (size_t index = 0; index < device_count; ++index) {
+      devices->emplace_back(torch::kCUDA, index);
+    }
+  }
+  if (!output_device) {
+    output_device = devices->front();
+  }
 
-//   if (devices->size() >= 1) {
-//     torch::Tensor loss = torch::zeros({1}).to(devices->front());
-//     module->to(devices->front());
-//     images = images.to(devices->front());
-//     std::vector<monodepth::structures::BoxList> target_device;
-//     for(auto& box : targets)
-//       target_device.push_back(box.To(devices->front()));
-//     auto loss_map = module->forward<std::map<std::string, torch::Tensor>>(images, target_device);//.to(*output_device);
-//     for(auto i = loss_map.begin(); i != loss_map.end(); ++i){
-//       loss += i->second;
-//     }
-//     loss_map["loss"] = loss;
-//     return std::make_pair(loss, loss_map);
-//   }
+  if (devices->size() >= 1) {
+    // torch::Tensor loss = torch::zeros({1}).to(devices->front());
+    module->to(devices->front());
+    input = input.to(devices->front());
 
-// #ifdef WITH_CUDA
-//   torch::autograd::Scatter scatter(*devices, /*chunk_sizes=*/torch::nullopt, dim);
-//   //handle input image_list
-//   torch::Tensor input = images.get_tensors();
-//   //because of current bug, set requires true is necessary
-//   //Remove next release TODO
-//   input.set_requires_grad(true);
-//   auto scattered_tensors = torch::fmap<torch::Tensor>(scatter.apply({std::move(input)}));
-//   std::vector<monodepth::structures::ImageList> scattered_inputs;
-//   int tensor_index = 0;
-//   for(auto& tensor : scattered_tensors){
-//     std::vector<std::pair<int64_t, int64_t>> slice;
-//     for(int i = 0; i < tensor.size(0); ++i)
-//       slice.push_back(images.get_image_sizes().at(i + tensor_index));
-//     scattered_inputs.emplace_back(tensor, slice);
-//     tensor_index += tensor.size(0);
-//   }
+    target["tensor_pre"].cuda();
+    target["tensor_cur"].cuda();
+    target["tensor_next"].cuda();
+    target["intrinsics"].cuda();
+    
+    
+    auto loss_map = module->forward<std::map<std::string, torch::Tensor>>(input, target).to(*output_device);
+
+    return loss_map;
+  }
+
+#ifdef WITH_CUDA
+  torch::autograd::Scatter scatter(*devices, /*chunk_sizes=*/torch::nullopt, dim);
   
-//   //handle target bounding_box
-//   std::vector<std::vector<monodepth::structures::BoxList>> scattered_targets;
-
-//   int box_index = 0;
-//   for(auto& scattered_images : scattered_inputs){
-//     int size = scattered_images.get_tensors().size(0);
-//     std::vector<monodepth::structures::BoxList> slice;
-//     slice.reserve(size);
-//     for(size_t index = 0; index < size; ++index)
-//       slice.push_back(targets.at(box_index + index).To(scattered_images.get_tensors().device()));
-//     scattered_targets.push_back(slice);
-//     box_index += size;
-//   }
-
-//   auto replicas = torch::nn::parallel::replicate<monodepth::modeling::GeneralizedRCNNImpl>(module, *devices);
-//   std::vector<std::map<std::string, torch::Tensor>> outputs = parallel_apply(replicas, scattered_inputs, scattered_targets, *devices);
-//   std::vector<torch::Tensor> total_loss;
-//   total_loss.reserve(outputs.size());
-//   for(auto& loss_map : outputs)
-//     total_loss.push_back(loss_map["loss"].unsqueeze(0));
   
-//   //to run this
-//   //this bug must be fixed
-//   //https://github.com/pytorch/pytorch/pull/20286
-//   //waiting for release this version...
-//   std::cout << "end loss cal\n";
-//   return std::make_pair(torch::autograd::Gather(*output_device, dim)
-//       .apply(torch::fmap<torch::autograd::Variable>(std::move(total_loss)))
-//       .front(), outputs[0]);
-// #else
-//   AT_ERROR("data_parallel not supported without CUDA");
-//   return std::make_pair(torch::Tensor(), std::map<std::string, torch::Tensor>{});
-// #endif
-// }
+  auto scattered_inputs = torch::fmap<torch::Tensor>(scatter.apply({std::move(input)}));
+  
+  auto scattered_targets = torch::fmap<monodepth::data::DICT>(scatter.apply({std::move(targets)}));
+  auto replicas = torch::nn::parallel::replicate<monodepth::modeling::SelfDepthModel>(module, *devices);
+  auto outputs = parallel_apply(replicas, scattered_inputs, scattered_targets, *devices);
+ 
+  return torch::autograd::Gather(*output_device, dim)
+      .apply(torch::fmap<torch::autograd::Variable>(std::move(outputs)))
+      .front();
+#else
+  AT_ERROR("data_parallel not supported without CUDA");
+  return  std::map<std::string, torch::Tensor>{};
+#endif
+}
 
-// }
-// }
+}
+}

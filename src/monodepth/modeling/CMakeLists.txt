@@ -6,4 +6,4 @@ target_include_directories(modeling
   PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../../include/monodepth/modeling/ )
   
 target_link_libraries(modeling 
-  PUBLIC layers config PRIVATE utils)
+  PUBLIC layers config data PRIVATE utils)

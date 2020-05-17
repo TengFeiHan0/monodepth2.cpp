@@ -100,8 +100,8 @@ namespace monodepth{
             return disps[0];
         }
 
-        DepthDecoder BuildDepthDecoderModule(){
-            return DepthDecoder();
+       DepthDecoder BuildDepthDecoderModule(){
+           return DepthDecoder();
         }
     }
 }

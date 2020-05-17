@@ -11,28 +11,25 @@
 namespace monodepth{
     namespace data{
 
-        struct ImageData{
+        // struct DICT{
+             
+        //     torch::Tensor tensor_pre;
+        //     torch::Tensor tensor_cur;
+        //     torch::Tensor tensor_next;
+        //     //augmented image
+        //     torch::Tensor aug_pre;
+        //     torch::Tensor aug_next;
 
-            int64_t img_idx;
+        //     torch::Tensor img_K;
 
-            cv::Mat img_pre;
-            cv::Mat img_cur;
-            cv::Mat img_next;
-
-            torch::Tensor tensor_pre;
-            torch::Tensor tensor_cur;
-            torch::Tensor tensor_next;
-
-            int img_width;
-            int img_height;
-            std::vector<std::vector<float>> img_K;
-        };
-
-        class CityScapesDataset: public torch::data::datasets::Dataset<CityScapesDataset, torch::data::Example<cv::Mat, monodepth::data::ImageData>> {
+        //     // torch::Tensor img_invK;
+        // };
+        typedef std::map<std::string, torch::Tensor> DICT;
+        class CityScapesDataset: public torch::data::datasets::Dataset<CityScapesDataset, torch::data::Example<cv::Mat, DICT>> {
             public:
                 CityScapesDataset(std::string data_path);
                 
-                torch::data::Example<cv::Mat, monodepth::data::ImageData> get(size_t index) override;
+                torch::data::Example<cv::Mat, DICT> get(size_t index) override;
 
                 torch::optional<size_t> size() const override;
 

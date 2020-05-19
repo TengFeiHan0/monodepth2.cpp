@@ -60,9 +60,12 @@ std::pair<int, int> Resize::get_size(std::pair<int, int> image_size){
 }
 
 torch::data::Example<cv::Mat, DICT> Resize::operator()(torch::data::Example<cv::Mat, DICT> input){
-  int h, w;
+
+  int h = monodepth::config::GetCFG<int>({"DATASETS", "IMG_HEIGHT"});
+  int w = monodepth::config::GetCFG<int>({"DATASETS", "IMG_WIDTH"});
+
   cv::Mat resized;
-  std::tie(h, w) = get_size(std::make_pair(input.data.cols, input.data.rows));
+  //std::tie(h, w) = //get_size(std::make_pair(input.data.cols, input.data.rows));
   cv::resize(input.data, resized, cv::Size(w, h));
   input.data = resized;
   // input.target["img_cur"] = resized;

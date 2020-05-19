@@ -10,7 +10,7 @@ namespace utils{
 class Checkpoint{
 
 public:
-  Checkpoint(std::shared_ptr<monodepth::modeling::SelfDepthModel> & model, 
+  Checkpoint(monodepth::modeling::SelfDepthModel & model, 
              monodepth::solver::ConcatOptimizer& optimizer, 
              monodepth::solver::ConcatScheduler& scheduler, 
              std::string save_dir);
@@ -25,7 +25,7 @@ public:
   static void load(monodepth::modeling::SelfDepthModel& model, std::string save_dir, std::string weight_dir);
 
 private:
-  std::shared_ptr<monodepth::modeling::SelfDepthModel> & model_;
+  monodepth::modeling::SelfDepthModel& model_;
   monodepth::solver::ConcatOptimizer& optimizer_;
   monodepth::solver::ConcatScheduler& scheduler_;
   std::string save_dir_;

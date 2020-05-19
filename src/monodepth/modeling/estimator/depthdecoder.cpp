@@ -7,13 +7,16 @@ namespace monodepth{
 
         DepthDecoderImpl::DepthDecoderImpl():backbone(register_module("backbone", BuildBackbone())){
 
-            num_ch_enc = monodepth::config::GetCFG<std::vector<int64_t>>({"MODEL","DEPTH", "NUM_CH_ENC"});
-            num_ch_dec = monodepth::config::GetCFG<std::vector<int64_t>>({"MODEL","DEPTH", "NUM_CH_DEC"});
-            use_skips = monodepth::config::GetCFG<bool>({"MODEL", "DEPTH", "USE_SKIPS"});
+            // num_ch_enc = monodepth::config::GetCFG<std::vector<int64_t>>({"MODEL","DEPTH", "NUM_CH_ENC"});
+            // num_ch_dec = monodepth::config::GetCFG<std::vector<int64_t>>({"MODEL","DEPTH", "NUM_CH_DEC"});
+            // use_skips = monodepth::config::GetCFG<bool>({"MODEL", "DEPTH", "USE_SKIPS"});
+            num_ch_enc = {64, 64, 128, 256, 512};
+            num_ch_dec = {64, 64, 128, 256, 512};
+            use_skips =true;
 
             for(int i=4; i>=0; i--) {
                 if(i==4){
-                    num_ch_in = num_ch_enc[num_ch_enc.size()-1];
+                    num_ch_in = num_ch_enc[4];
                 }
                 else{
                     num_ch_in = num_ch_dec[i+1];

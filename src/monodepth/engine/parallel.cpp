@@ -9,8 +9,8 @@ namespace engine{
 
 std::vector<std::map<std::string, torch::Tensor>> parallel_apply(
     std::vector<torch::nn::ModuleHolder<monodepth::modeling::SelfDepthModel>>& modules,
-    const std::vector<torch::Tensor> &inputs,
-    const std::vector<monodepth::data::DICT> &targets,
+    std::vector<torch::Tensor> &inputs,
+    std::vector<monodepth::data::DICT> &targets,
     const torch::optional<std::vector<torch::Device>>& devices) {
     TORCH_CHECK(
         modules.size() == inputs.size(), "Must have as many inputs as modules");
@@ -100,9 +100,9 @@ std::map<std::string, torch::Tensor> data_parallel(
   torch::autograd::Scatter scatter(*devices, /*chunk_sizes=*/torch::nullopt, dim);
   
   
-  auto scattered_inputs = torch::fmap<torch::Tensor>(scatter.apply({std::move(input)}));
+  std::vector<torch::Tensor> scattered_inputs = torch::fmap<torch::Tensor>(scatter.apply({std::move(input)}));
   
-  auto scattered_targets = torch::fmap<monodepth::data::DICT>(scatter.apply({std::move(targets)}));
+  std::vector<monodepth::data::DICT> scattered_targets = torch::fmap<monodepth::data::DICT>(scatter.apply({std::move(target)}));
   auto replicas = torch::nn::parallel::replicate<monodepth::modeling::SelfDepthModel>(module, *devices);
   auto outputs = parallel_apply(replicas, scattered_inputs, scattered_targets, *devices);
  

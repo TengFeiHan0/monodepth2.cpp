@@ -29,16 +29,19 @@ namespace monodepth{
       
             std::map<std::string, torch::Tensor> target;
             cv::Mat img_pre, img_cur, img_next;
-            // input.img_height = monodepth::config::GetCFG<int>({"DATASETS", "IMG_HEIGHT"});
-            // input.img_width = monodepth::config::GetCFG<int>({"DATASETS", "IMG_WIDTH"});
+            int img_height = monodepth::config::GetCFG<int>({"DATASETS", "IMG_HEIGHT"});
+            int img_width = monodepth::config::GetCFG<int>({"DATASETS", "IMG_WIDTH"});
 
             img_cur = cv::imread(all_img_path[index]);
+
+            cv::resize(img_cur, img_cur, cv::Size(img_width, img_height));
             target["tensor_cur"]= img2Tensor(img_cur);
             //special case at the first and last image
             if(index == 0){
                  img_pre = cv::imread(all_img_path[0]);
                  img_next = cv::imread(all_img_path[index+1]);
-
+                 cv::resize(img_pre, img_pre, cv::Size(img_width, img_height));
+                 cv::resize(img_next, img_next, cv::Size(img_width, img_height));
                  target["tensor_pre"] = img2Tensor(img_pre);
                  target["tensor_next"] = img2Tensor(img_next);
                  torch::data::Example<cv::Mat, DICT> value{img_cur, target};
@@ -47,7 +50,8 @@ namespace monodepth{
 
                 img_pre = cv::imread(all_img_path[index-1]);
                 img_next = cv::imread(all_img_path[index]);
-                
+                cv::resize(img_pre, img_pre, cv::Size(img_width, img_height));
+                cv::resize(img_next, img_next, cv::Size(img_width, img_height));
                 target["tensor_pre"] = img2Tensor(img_pre);
                 target["tensor_next"] = img2Tensor(img_next);
                 torch::data::Example<cv::Mat, DICT> value{img_cur, target};
@@ -56,7 +60,8 @@ namespace monodepth{
             
             img_pre = cv::imread(all_img_path[index-1]);
             img_next = cv::imread(all_img_path[index+1]);
-
+            cv::resize(img_pre, img_pre, cv::Size(img_width, img_height));
+            cv::resize(img_next, img_next, cv::Size(img_width, img_height));
             float array[] = {1.105, 0, 0.537, 0, 
                            0, 2.212, 0.501, 0, 
                            0, 0, 1, 0,

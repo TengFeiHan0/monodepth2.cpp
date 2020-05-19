@@ -7,7 +7,7 @@
 namespace monodepth{
 namespace solver{
 
-ConcatOptimizer MakeOptimizer(std::shared_ptr<monodepth::modeling::SelfDepthModel> &model);
+ConcatOptimizer MakeOptimizer(monodepth::modeling::SelfDepthModel &model);
 
 ConcatScheduler MakeLRScheduler(ConcatOptimizer& optimizer, int last_epoch);
 

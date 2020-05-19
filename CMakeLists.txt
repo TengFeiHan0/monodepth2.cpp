@@ -36,7 +36,7 @@ endif()
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/src)
 add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/lib/gtest)
 #add_subdirectory(${CMAKE_CURRENT_SOURCE_DIR}/test/monodepth)
-add_executable(run.out
+add_executable(monodepth2
   runner.cpp)
 
-target_link_libraries(run.out depth)
+target_link_libraries(monodepth2 depth)

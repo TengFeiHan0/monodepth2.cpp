@@ -63,7 +63,7 @@ namespace utils{
 //   std::cout << "Load Complete\n";
 // }
 
-Checkpoint::Checkpoint(std::shared_ptr<monodepth::modeling::SelfDepthModel> & model, 
+Checkpoint::Checkpoint(monodepth::modeling::SelfDepthModel & model, 
                     monodepth::solver::ConcatOptimizer& optimizer, 
                     monodepth::solver::ConcatScheduler& scheduler, 
                     std::string save_dir)
@@ -134,7 +134,7 @@ int Checkpoint::load_from_checkpoint(){
   std::string checkpoint_name = get_checkpoint_file();
   torch::serialize::InputArchive archive;
   archive.load_from(checkpoint_name);
-  model_->load(archive);
+  model_.load(archive);
   optimizer_.load(archive);
   scheduler_.load(archive);
 
@@ -147,7 +147,7 @@ void Checkpoint::save(std::string name, int iteration){
   auto iter = torch::tensor({iteration}).to(torch::kI64);
   archive.write("iteration", iter, true);
   std::cout << "Saving checkpoint to " << save_dir_ + "/" + name << "\n";
-  model_->save(archive);
+  model_.save(archive);
   optimizer_.save(archive);
   scheduler_.save(archive);
   archive.save_to(save_dir_ + "/" + name);

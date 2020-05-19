@@ -7,9 +7,7 @@
 namespace monodepth{
 namespace data{
 
-//supports only one dataset
-//TODO Concat dataset
-CityScapesDataset BuildDataset(std::vector<std::string> dataset_list);
+CityScapesDataset BuildCityDataset(std::vector<std::string> dataset_list);
 
 template<typename T>
 T MakeDataLoader(bool is_train, int start_iter);

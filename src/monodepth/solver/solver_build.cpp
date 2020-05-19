@@ -5,8 +5,8 @@
 namespace monodepth{
 namespace solver{
 
-ConcatOptimizer MakeOptimizer(std::shared_ptr<monodepth::modeling::SelfDepthModel> &model){
-  return ConcatOptimizer(model->named_parameters(), 
+ConcatOptimizer MakeOptimizer(monodepth::modeling::SelfDepthModel &model){
+  return ConcatOptimizer(model.named_parameters(), 
                         monodepth::config::GetCFG<double>({"SOLVER", "BASE_LR"}),
                         monodepth::config::GetCFG<double>({"SOLVER", "MOMENTUM"}),
                         monodepth::config::GetCFG<double>({"SOLVER", "WEIGHT_DECAY"}),

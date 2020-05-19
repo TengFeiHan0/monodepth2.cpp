@@ -8,8 +8,6 @@ namespace monodepth{
         
         torch::Tensor SSIM(torch::Tensor x, torch::Tensor y, float C1, float C2);
 
-        torch::nn::AvgPool2d pool2d{nullptr};
-
-        torch::nn::ReflectionPad2d refl{nullptr};
+        
     }
 }

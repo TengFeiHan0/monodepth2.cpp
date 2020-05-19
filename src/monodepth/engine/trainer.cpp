@@ -1,5 +1,5 @@
 #include "trainer.h"
-#include "parallel.h"
+//#include "parallel.h"
 #include "defaults.h"
 #include "samplers/build.h"
 
@@ -42,7 +42,8 @@ void do_train(){
   int checkpoint_period = GetCFG<int>({"SOLVER", "CHECKPOINT_PERIOD"});
 
   cout << "building model\n";
-  std::shared_ptr<SelfDepthModel> model = std::make_shared<SelfDepthModel>();
+  SelfDepthModel model = BuildModel();
+  
   cout << "build complete!\n";
 
   cout << "Making optimizer and scheduler\n";
@@ -50,17 +51,17 @@ void do_train(){
   ConcatScheduler scheduler = MakeLRScheduler(optimizer, 0);
 
   auto check_point = Checkpoint(model, optimizer, scheduler, output_dir);
-  int start_iter = check_point.load(GetCFG<std::string>({"MODEL", "WEIGHT"}));
+  //int start_iter = check_point.load(GetCFG<std::string>({"MODEL", "WEIGHT"}));
+  int start_iter = 0;
   int iteration = start_iter;
   scheduler.set_last_epoch(start_iter);
-  //vector<string> dataset_list = GetCFG<std::vector<std::string>>({"DATASETS", "TRAIN"});
-
+  
   cout << "building dataset ...\n" << endl;
   bool is_train=true;
-  vector<string> dataset_list = GetCFG<std::vector<std::string>>({"DATASETS", "TRAIN"});
-  Compose transforms = BuildTransforms(is_train);
-  BatchCollator collate = BatchCollator(monodepth::config::GetCFG<int>({"DATALOADER", "SIZE_DIVISIBILITY"}));
   
+  Compose transforms = BuildTransforms(is_train);
+  //BatchCollator collate = BatchCollator(monodepth::config::GetCFG<int>({"DATALOADER", "SIZE_DIVISIBILITY"}));
+  cout << "building data transform...\n"<<endl;
   int64_t images_per_batch;
   if(is_train){
     images_per_batch = monodepth::config::GetCFG<int64_t>({"SOLVER", "IMS_PER_BATCH"});
@@ -68,19 +69,21 @@ void do_train(){
   else{
     images_per_batch = monodepth::config::GetCFG<int64_t>({"TEST", "IMS_PER_BATCH"});
   }
-  CityScapesDataset city = BuildDataset(dataset_list);
+  std::vector<std::string> dataset_list{"cityscapes_fine"};
+  CityScapesDataset  city = BuildCityDataset(dataset_list);
+  cout<<"Building CityScapes completed"<<endl;
   auto dataset = city.map(transforms);//.map(collate);
-  std::shared_ptr<torch::data::samplers::Sampler<>> sampler = make_batch_data_sampler(city, is_train, start_iter);
+  //std::shared_ptr<torch::data::samplers::Sampler<>> sampler = make_batch_data_sampler(city, is_train, start_iter);
 
 
   torch::data::DataLoaderOptions options(images_per_batch);
   options.workers(monodepth::config::GetCFG<int64_t>({"DATALOADER", "NUM_WORKERS"}));
   int num_iter = monodepth::config::GetCFG<int64_t>({"SOLVER", "MAX_ITER"});
-  auto data_loader =torch::data::make_data_loader(std::move(dataset), *dynamic_cast<torch::data::samplers::RandomSampler*>(sampler.get()), options);
+  auto data_loader =torch::data::make_data_loader(std::move(dataset), options);
 
   
-  model->to(device);
-  model->train();
+  model.to(device);
+  model.train();
   cout << "Start training\n";
   for(auto &i : *data_loader){
     data_time = chrono::system_clock::now() - end;
@@ -90,7 +93,7 @@ void do_train(){
     #ifdef WITH_CUDA
     map<string, torch::Tensor> loss_map;
     torch::Tensor loss;
-    loss_map= data_parallel(model, i.data, i.target);
+    loss_map= model.forward<std::map<string, torch::Tensor>>(i[0].data, i[0].target);
     loss = loss_map["loss"];
     #else
     torch::Tensor image = get<0>(i).to(device);
@@ -99,7 +102,7 @@ void do_train(){
     for(auto& tar : target){
         tar = tar.to(device);
     }
-    map<string, torch::Tensor> loss_map = model->forward<map<string, torch::Tensor>>(image, target);
+    map<string, torch::Tensor> loss_map = model.forward<map<string, torch::Tensor>>(image, target);
 
     for(auto i = loss_map.begin(); i != loss_map.end(); ++i){
       if(i == loss_map.begin()){

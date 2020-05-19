@@ -10,24 +10,15 @@ const std::string DatasetCatalog::DATA_DIR = "../datasets";
 const std::map<std::string, args> DatasetCatalog::DATASETS{
   {"coco_2017_train", 
     args{{"img_dir", "coco/train2017"}, {"ann_file", "coco/annotations/instances_train2017.json"}}},
-  {"coco_2017_val", 
-    args{{"img_dir", "coco/val2017"}, {"ann_file", "coco/annotations/instances_val2017.json"}}},
-  {"coco_2014_train", 
-    args{{"img_dir", "coco/train2014"}, {"ann_file", "coco/annotations/instances_train2014.json"}}},
-  {"coco_2014_val",
-    args{{"img_dir", "coco/val2014"}, {"ann_file", "coco/annotations/instances_val2014.json"}}},
-  {
-    "cityscapes_fine_instanceonly_seg_train_cocostyle",
+  {"cityscapes_fine",
     args{{"img_dir", "cityscapes/images"}, {"ann_file", ""}}},   
-  {"coco_2014_minival",
-    args{{"img_dir", "coco/val2014"}, {"ann_file", "coco/annotations/instances_valminusminival2014.json"}}}
 };
 
 std::tuple<std::string, std::string, std::string> DatasetCatalog::operator[](std::string name){
   if(name.find("coco") != std::string::npos){
     return std::make_tuple("COCODataset", DATA_DIR + "/" + DatasetCatalog::DATASETS.at(name).at("img_dir"), DATA_DIR + "/" + DatasetCatalog::DATASETS.at(name).at("ann_file")); 
   }
-  if(name.find("cityscapes") != std::string::npos){
+  if(name.find("city") != std::string::npos){
     return std::make_tuple("CityScapesDataset", DATA_DIR + "/" + DatasetCatalog::DATASETS.at(name).at("img_dir"), DATA_DIR + "/" + DatasetCatalog::DATASETS.at(name).at("ann_file"));
   }
   //no voc

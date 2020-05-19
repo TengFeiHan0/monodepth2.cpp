@@ -11,8 +11,8 @@ namespace engine{
 
 std::vector<std::map<std::string, torch::Tensor>> parallel_apply(
     std::vector<monodepth::modeling::SelfDepthModel>& modules,
-    const std::vector<torch::Tensor> &inputs,
-    const std::vector<monodepth::data::DICT> &targets,
+    std::vector<torch::Tensor> &inputs,
+    std::vector<monodepth::data::DICT> &targets,
     const torch::optional<std::vector<torch::Device>>& devices = torch::nullopt);
 
 

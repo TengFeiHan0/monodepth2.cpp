@@ -39,8 +39,11 @@ void SetCFGFromFile(const std::string file_path){
 
   //DATASET
   SetNode((*cfg)["DATASETS"], YAML::Node());
-  SetNode((*cfg)["DATASETS"]["TRAIN"], "city");
+  SetNode((*cfg)["DATASETS"]["TRAIN"], "cityscapes_fine");
   SetNode((*cfg)["DATASETS"]["TEST"], "city");
+  SetNode((*cfg)["DATASETS"]["IMG_HEIGHT"], "192");
+  SetNode((*cfg)["DATASETS"]["IMG_WIDTH"], "640");
+  SetNode((*cfg)["DATASETS"]["IMG_EXT"], ".png");
   //DATALOADER
   SetNode((*cfg)["DATALOADER"], YAML::Node());
   SetNode((*cfg)["DATALOADER"]["NUM_WORKERS"], 4);
@@ -83,6 +86,28 @@ void SetCFGFromFile(const std::string file_path){
   SetNode((*cfg)["MODEL"]["VOVNET"]["OUT_CHANNELS"], 256);
   SetNode((*cfg)["MODEL"]["VOVNET"]["BACKBONE_OUT_CHANNELS"], 256);
 
+
+  //depth
+  SetNode((*cfg)["MODEL"]["DEPTH"], YAML::Node());
+  SetNode((*cfg)["MODEL"]["DEPTH"]["NUM_CH_ENC"], (64, 128, 256, 512, 512));
+  SetNode((*cfg)["MODEL"]["DEPTH"]["NUM_CH_DEC"], (64, 128, 256, 512, 512));
+  SetNode((*cfg)["MODEL"]["DEPTH"]["USE_SKIPS"], true);
+  SetNode((*cfg)["MODEL"]["DEPTH"]["NUM_FRAMES"], 3);
+  SetNode((*cfg)["MODEL"]["DEPTH"]["OUT_CHANNELS"], 256);
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
   //SOLVER
   SetNode((*cfg)["SOLVER"], YAML::Node());
   SetNode((*cfg)["SOLVER"]["MAX_ITER"], 40000);
@@ -97,7 +122,7 @@ void SetCFGFromFile(const std::string file_path){
   SetNode((*cfg)["SOLVER"]["WARMUP_ITERS"], 500);
   SetNode((*cfg)["SOLVER"]["WARMUP_METHOD"], "linear");
   SetNode((*cfg)["SOLVER"]["CHECKPOINT_PERIOD"], 2500);
-  SetNode((*cfg)["SOLVER"]["IMS_PER_BATCH"], 16);
+  SetNode((*cfg)["SOLVER"]["IMS_PER_BATCH"], 2);
 
   //TEST
   SetNode((*cfg)["TEST"], YAML::Node());
